@@ -1,8 +1,8 @@
-# 设置输出编码为 UTF-8
+# Set output encoding to UTF-8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# 颜色定义（兼容 PowerShell 5.1 和 7.x）
+# Color definitions (compatible with PowerShell 5.1 and 7.x)
 $ESC = [char]27
 $RED = "$ESC[31m"
 $GREEN = "$ESC[32m"
@@ -10,14 +10,14 @@ $YELLOW = "$ESC[33m"
 $BLUE = "$ESC[34m"
 $NC = "$ESC[0m"
 
-# 启动时尝试调整终端窗口大小为 120x40（列x行）；不支持/失败时静默忽略，避免影响脚本主流程
+# Try resizing terminal window to 120x40 (Columns x Rows) on startup; silently ignore if unsupported/fails
 function Try-ResizeTerminalWindow {
     param(
         [int]$Columns = 120,
         [int]$Rows = 40
     )
 
-    # 方式1：通过 PowerShell Host RawUI 调整（传统控制台、ConEmu 等可能支持）
+    # Method 1: Adjust via PowerShell Host RawUI (traditional console, ConEmu, etc.)
     try {
         $rawUi = $null
         if ($Host -and $Host.UI -and $Host.UI.RawUI) {
@@ -26,7 +26,7 @@ function Try-ResizeTerminalWindow {
 
         if ($rawUi) {
             try {
-                # BufferSize 必须 >= WindowSize，否则会抛异常
+                # BufferSize must be >= WindowSize, otherwise throws exception
                 $bufferSize = $rawUi.BufferSize
                 $newBufferSize = New-Object System.Management.Automation.Host.Size (
                     ([Math]::Max($bufferSize.Width, $Columns)),
@@ -34,33 +34,33 @@ function Try-ResizeTerminalWindow {
                 )
                 $rawUi.BufferSize = $newBufferSize
             } catch {
-                # 静默忽略
+                # Silently ignore
             }
 
             try {
                 $rawUi.WindowSize = New-Object System.Management.Automation.Host.Size ($Columns, $Rows)
             } catch {
-                # 静默忽略
+                # Silently ignore
             }
         }
     } catch {
-        # 静默忽略
+        # Silently ignore
     }
 
-    # 方式2：通过 ANSI 转义序列再尝试一次（Windows Terminal 等可能支持）
+    # Method 2: Try ANSI escape sequence (Windows Terminal, etc.)
     try {
         if (-not [Console]::IsOutputRedirected) {
             $escChar = [char]27
             [Console]::Out.Write("$escChar[8;${Rows};${Columns}t")
         }
     } catch {
-        # 静默忽略
+        # Silently ignore
     }
 }
 
 Try-ResizeTerminalWindow -Columns 120 -Rows 40
 
-# 路径解析：优先使用 .NET 获取系统目录，避免环境变量缺失导致路径异常
+# Path resolution: Prefer .NET system directories to avoid missing env var issues
 function Get-FolderPathSafe {
     param(
         [Parameter(Mandatory = $true)][System.Environment+SpecialFolder]$SpecialFolder,
@@ -85,15 +85,15 @@ function Get-FolderPathSafe {
         }
     }
     if ([string]::IsNullOrWhiteSpace($path)) {
-        Write-Host "$YELLOW⚠️  [路径]$NC $Label 无法解析，将尝试其他方式"
+        Write-Host "$YELLOW⚠️  [Path]$NC $Label could not be resolved, will try fallback methods"
     } else {
-        Write-Host "$BLUEℹ️  [路径]$NC ${Label}: $path"
+        Write-Host "$BLUEℹ️  [Path]$NC ${Label}: $path"
     }
     return $path
 }
 
 function Initialize-CursorPaths {
-    Write-Host "$BLUEℹ️  [路径]$NC 开始解析 Cursor 相关路径..."
+    Write-Host "$BLUEℹ️  [Path]$NC Resolving Cursor-related paths..."
     $global:CursorAppDataRoot = Get-FolderPathSafe `
         -SpecialFolder ([System.Environment+SpecialFolder]::ApplicationData) `
         -EnvVarName "APPDATA" `
@@ -109,7 +109,7 @@ function Initialize-CursorPaths {
         $global:CursorUserProfileRoot = [Environment]::GetEnvironmentVariable("USERPROFILE")
     }
     if (-not [string]::IsNullOrWhiteSpace($global:CursorUserProfileRoot)) {
-        Write-Host "$BLUEℹ️  [路径]$NC 用户目录: $global:CursorUserProfileRoot"
+        Write-Host "$BLUEℹ️  [Path]$NC User profile directory: $global:CursorUserProfileRoot"
     }
     $global:CursorAppDataDir = if ($global:CursorAppDataRoot) { Join-Path $global:CursorAppDataRoot "Cursor" } else { $null }
     $global:CursorLocalAppDataDir = if ($global:CursorLocalAppDataRoot) { Join-Path $global:CursorLocalAppDataRoot "Cursor" } else { $null }
@@ -118,13 +118,13 @@ function Initialize-CursorPaths {
     $global:CursorBackupDir = if ($global:CursorStorageDir) { Join-Path $global:CursorStorageDir "backups" } else { $null }
 
     if ($global:CursorStorageDir -and -not (Test-Path $global:CursorStorageDir)) {
-        Write-Host "$YELLOW⚠️  [路径]$NC 全局配置目录不存在: $global:CursorStorageDir"
+        Write-Host "$YELLOW⚠️  [Path]$NC Global storage directory does not exist: $global:CursorStorageDir"
     }
     if ($global:CursorStorageFile) {
         if (Test-Path $global:CursorStorageFile) {
-            Write-Host "$GREEN✅ [路径]$NC 已找到配置文件: $global:CursorStorageFile"
+            Write-Host "$GREEN✅ [Path]$NC Found configuration file: $global:CursorStorageFile"
         } else {
-            Write-Host "$YELLOW⚠️  [路径]$NC 配置文件不存在: $global:CursorStorageFile"
+            Write-Host "$YELLOW⚠️  [Path]$NC Configuration file does not exist: $global:CursorStorageFile"
         }
     }
 }
@@ -178,28 +178,28 @@ function Get-CursorInstallPathFromRegistry {
                 }
             }
         } catch {
-            Write-Host "$YELLOW⚠️  [路径]$NC 读取注册表失败: $key"
+            Write-Host "$YELLOW⚠️  [Path]$NC Failed to read registry key: $key"
         }
     }
     return $results | Where-Object { $_ } | Select-Object -Unique
 }
 
 function Request-CursorInstallPathFromUser {
-    Write-Host "$YELLOW💡 [提示]$NC 自动检测失败，可手动选择 Cursor 安装目录（包含 Cursor.exe）"
+    Write-Host "$YELLOW💡 [Tip]$NC Auto-detection failed. You can manually select the Cursor install directory (containing Cursor.exe)"
     $selectedPath = $null
     try {
         Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
         $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-        $dialog.Description = "请选择 Cursor 安装目录（包含 Cursor.exe）"
+        $dialog.Description = "Please select the Cursor installation directory (containing Cursor.exe)"
         $dialog.ShowNewFolderButton = $false
         if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
             $selectedPath = $dialog.SelectedPath
         }
     } catch {
-        Write-Host "$YELLOW⚠️  [提示]$NC 无法打开选择窗口，将使用命令行输入"
+        Write-Host "$YELLOW⚠️  [Tip]$NC Could not open folder dialog, falling back to console input"
     }
     if (-not $selectedPath) {
-        $manualInput = Read-Host "请输入 Cursor 安装目录（包含 Cursor.exe），或直接回车取消"
+        $manualInput = Read-Host "Please enter the Cursor installation directory (containing Cursor.exe), or press Enter to cancel"
         if (-not [string]::IsNullOrWhiteSpace($manualInput)) {
             $selectedPath = $manualInput
         }
@@ -207,10 +207,10 @@ function Request-CursorInstallPathFromUser {
     if ($selectedPath) {
         $normalized = Normalize-CursorInstallCandidate -Path $selectedPath
         if ($normalized -and (Test-CursorInstallPath -Path $normalized)) {
-            Write-Host "$GREEN✅ [发现]$NC 手动指定安装路径: $normalized"
+            Write-Host "$GREEN✅ [Found]$NC Manually specified install path: $normalized"
             return $normalized
         }
-        Write-Host "$RED❌ [错误]$NC 手动路径无效: $selectedPath"
+        Write-Host "$RED❌ [Error]$NC Invalid manual path: $selectedPath"
     }
     return $null
 }
@@ -221,7 +221,7 @@ function Resolve-CursorInstallPath {
         return $global:CursorInstallPath
     }
 
-    Write-Host "$BLUE🔎 [路径]$NC 正在检测 Cursor 安装目录..."
+    Write-Host "$BLUE🔎 [Path]$NC Detecting Cursor installation directory..."
     $candidates = @()
     if ($global:CursorLocalAppDataRoot) {
         $candidates += (Join-Path $global:CursorLocalAppDataRoot "Programs\Cursor")
@@ -237,7 +237,7 @@ function Resolve-CursorInstallPath {
 
     $regCandidates = @(Get-CursorInstallPathFromRegistry)
     if ($regCandidates.Count -gt 0) {
-        Write-Host "$BLUEℹ️  [路径]$NC 从注册表发现候选路径: $($regCandidates -join '; ')"
+        Write-Host "$BLUEℹ️  [Path]$NC Found candidate path(s) from registry: $($regCandidates -join '; ')"
         $candidates += $regCandidates
     }
 
@@ -257,10 +257,10 @@ function Resolve-CursorInstallPath {
         if (-not $candidate) {
             continue
         }
-        Write-Host "$BLUE⏳ [路径]$NC ($attempt/$totalCandidates) 尝试安装路径: $candidate"
+        Write-Host "$BLUE⏳ [Path]$NC ($attempt/$totalCandidates) Trying install path: $candidate"
         if (Test-CursorInstallPath -Path $candidate) {
             $global:CursorInstallPath = $candidate
-            Write-Host "$GREEN✅ [发现]$NC 找到Cursor安装路径: $candidate"
+            Write-Host "$GREEN✅ [Found]$NC Found Cursor install path: $candidate"
             return $candidate
         }
     }
@@ -273,17 +273,17 @@ function Resolve-CursorInstallPath {
         }
     }
 
-    Write-Host "$RED❌ [错误]$NC 未找到Cursor应用安装路径"
-    Write-Host "$YELLOW💡 [提示]$NC 请确认Cursor已正确安装或手动指定路径"
+    Write-Host "$RED❌ [Error]$NC Cursor application install path not found"
+    Write-Host "$YELLOW💡 [Tip]$NC Please ensure Cursor is properly installed or specify the path manually"
     return $null
 }
 
-# 配置文件路径（初始化后统一使用全局变量）
+# Configuration file paths (use global variables after initialization)
 Initialize-CursorPaths
 $STORAGE_FILE = $global:CursorStorageFile
 $BACKUP_DIR = $global:CursorBackupDir
 
-# PowerShell原生方法生成随机字符串
+# Native PowerShell random string generation
 function Generate-RandomString {
     param([int]$Length)
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -294,8 +294,8 @@ function Generate-RandomString {
     return $result
 }
 
-# 🔍 简易 JavaScript 花括号匹配（用于在限定片段内定位函数边界，避免正则跨段误替换）
-# 说明：这是一个轻量解析器，足以应对 main.js 中的压缩函数体（含 try/catch、字符串、注释）。
+# 🔍 Lightweight JavaScript brace matcher (locates function boundaries within snippets without broken regexes)
+# Note: Lightweight parser capable of handling minified function bodies in main.js (with try/catch, strings, comments).
 function Find-JsMatchingBraceEnd {
     param(
         [Parameter(Mandatory = $true)][string]$Text,
@@ -349,16 +349,16 @@ function Find-JsMatchingBraceEnd {
             continue
         }
 
-        # 注释检测（仅在非字符串状态下）
+        # Comment detection (only when not in a string)
         if ($ch -eq '/' -and $next -eq '/') { $inLineComment = $true; $i++; continue }
         if ($ch -eq '/' -and $next -eq '*') { $inBlockComment = $true; $i++; continue }
 
-        # 字符串/模板字符串
+        # String / Template literals
         if ($ch -eq "'") { $inSingle = $true; continue }
         if ($ch -eq '"') { $inDouble = $true; continue }
         if ($ch -eq '`') { $inTemplate = $true; continue }
 
-        # 花括号深度
+        # Brace depth
         if ($ch -eq '{') { $depth++; continue }
         if ($ch -eq '}') {
             $depth--
@@ -369,33 +369,33 @@ function Find-JsMatchingBraceEnd {
     return -1
 }
 
-# 🔧 修改Cursor内核JS文件实现设备识别绕过（增强版三重方案）
-# 方案A: someValue占位符替换 - 稳定锚点，不依赖混淆后的函数名
-# 方案B: b6 定点重写 - 机器码源函数直接返回固定值
-# 方案C: Loader Stub + 外置 Hook - 主/共享进程仅加载外置 Hook 文件
+# 🔧 Modify Cursor core JS files for device ID bypass (Enhanced triple-method approach)
+# Method A: someValue placeholder replacement - stable anchor, independent of obfuscated function names
+# Method B: b6 targeted rewrite - machine code source function returns fixed values directly
+# Method C: Loader Stub + External Hook - main/shared processes load external hook file
 function Modify-CursorJSFiles {
     Write-Host ""
-    Write-Host "$BLUE🔧 [内核修改]$NC 开始修改Cursor内核JS文件实现设备识别绕过..."
-    Write-Host "$BLUE💡 [方案]$NC 使用增强版三重方案：占位符替换 + b6 定点重写 + Loader Stub + 外置 Hook"
+    Write-Host "$BLUE🔧 [Kernel Patch]$NC Starting modification of Cursor core JS files for device ID bypass..."
+    Write-Host "$BLUE💡 [Method]$NC Using enhanced triple-method approach: Placeholder replacement + b6 rewrite + Loader Stub + External Hook"
     Write-Host ""
 
-    # Windows版Cursor应用路径（支持自动检测 + 手动兜底）
+    # Windows Cursor application path (auto-detect + manual fallback)
     $cursorAppPath = Resolve-CursorInstallPath -AllowPrompt
     if (-not $cursorAppPath) {
         return $false
     }
 
-    # 生成或复用设备标识符（优先使用配置中生成的值）
+    # Generate or reuse device identifiers (prioritize configured values)
     $useConfigIds = $false
     if ($global:CursorIds -and $global:CursorIds.machineId -and $global:CursorIds.macMachineId -and $global:CursorIds.devDeviceId -and $global:CursorIds.sqmId) {
         $machineId = [string]$global:CursorIds.machineId
         $macMachineId = [string]$global:CursorIds.macMachineId
         $deviceId = [string]$global:CursorIds.devDeviceId
         $sqmId = [string]$global:CursorIds.sqmId
-        # 机器 GUID 用于模拟注册表/原始机器码读取
+        # Machine GUID for emulating registry / raw machine ID reading
         $machineGuid = if ($global:CursorIds.machineGuid) { [string]$global:CursorIds.machineGuid } else { [System.Guid]::NewGuid().ToString().ToLower() }
         $sessionId = if ($global:CursorIds.sessionId) { [string]$global:CursorIds.sessionId } else { [System.Guid]::NewGuid().ToString().ToLower() }
-        # 使用 UTC 时间生成/规范化 firstSessionDate，避免本地时间却带 Z 的语义错误；同时兼容 ConvertFrom-Json 可能返回 DateTime
+        # Generate/normalize firstSessionDate with UTC time to avoid timezone semantic errors; also handle DateTime from ConvertFrom-Json
         $firstSessionDateValue = if ($global:CursorIds.firstSessionDate) {
             $rawFirstSessionDate = $global:CursorIds.firstSessionDate
             if ($rawFirstSessionDate -is [DateTime]) {
@@ -423,18 +423,18 @@ function Modify-CursorJSFiles {
         $macMachineId = [System.BitConverter]::ToString($randomBytes2) -replace '-',''
         $rng2.Dispose()
         $sqmId = "{" + [System.Guid]::NewGuid().ToString().ToUpper() + "}"
-        # 机器 GUID 用于模拟注册表/原始机器码读取
+        # Machine GUID for emulating registry / raw machine ID reading
         $machineGuid = [System.Guid]::NewGuid().ToString().ToLower()
         $sessionId = [System.Guid]::NewGuid().ToString().ToLower()
-        # 使用 UTC 时间生成 firstSessionDate，避免本地时间却带 Z 的语义错误
+        # Generate firstSessionDate with UTC time
         $firstSessionDateValue = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         $macAddress = "00:11:22:33:44:55"
     }
 
     if ($useConfigIds) {
-        Write-Host "$GREEN🔑 [准备]$NC 已使用配置中的设备标识符"
+        Write-Host "$GREEN🔑 [Prepare]$NC Using configured device identifiers"
     } else {
-        Write-Host "$GREEN🔑 [生成]$NC 已生成新的设备标识符"
+        Write-Host "$GREEN🔑 [Generate]$NC Generated new device identifiers"
     }
     Write-Host "   machineId: $($machineId.Substring(0,16))..."
     Write-Host "   machineGuid: $($machineGuid.Substring(0,16))..."
@@ -442,12 +442,12 @@ function Modify-CursorJSFiles {
     Write-Host "   macMachineId: $($macMachineId.Substring(0,16))..."
     Write-Host "   sqmId: $sqmId"
 
-    # 保存 ID 配置到用户目录（供 Hook 读取）
-    # 每次执行都删除旧配置并重新生成，确保获得新的设备标识符
+    # Save ID configuration to user profile (for Hook to read)
+    # Remove old config on each run to ensure fresh identifiers
     $idsConfigPath = "$env:USERPROFILE\.cursor_ids.json"
     if (Test-Path $idsConfigPath) {
         Remove-Item -Path $idsConfigPath -Force
-        Write-Host "$YELLOW🗑️  [清理]$NC 已删除旧的 ID 配置文件"
+        Write-Host "$YELLOW🗑️  [Clean]$NC Removed old ID configuration file"
     }
     $idsConfig = @{
         machineId = $machineId
@@ -461,11 +461,11 @@ function Modify-CursorJSFiles {
         createdAt = $firstSessionDateValue
     }
     $idsConfig | ConvertTo-Json | Set-Content -Path $idsConfigPath -Encoding UTF8
-    Write-Host "$GREEN💾 [保存]$NC 新的 ID 配置已保存到: $idsConfigPath"
+    Write-Host "$GREEN💾 [Save]$NC New ID configuration saved to: $idsConfigPath"
 
-    # 部署外置 Hook 文件（供 Loader Stub 加载，支持多域名备用下载）
+    # Deploy external Hook file (loaded by Loader Stub, with multi-mirror download fallback)
     $hookTargetPath = "$env:USERPROFILE\.cursor_hook.js"
-    # 兼容：通过 `irm ... | iex` 执行时 $PSScriptRoot 可能为空，Join-Path 会直接报错
+    # Compatibility: When executed via `irm ... | iex`, $PSScriptRoot might be empty
     $hookSourceCandidates = @()
     if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
         $hookSourceCandidates += (Join-Path $PSScriptRoot "..\hook\cursor_hook.js")
@@ -482,44 +482,45 @@ function Modify-CursorJSFiles {
     }
     $hookSourcePath = $hookSourceCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
     $hookDownloadUrls = @(
+        "https://raw.githubusercontent.com/yuaotian/go-cursor-help/master/scripts/hook/cursor_hook.js",
         "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js",
         "https://down.npee.cn/?https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js",
         "https://xget.xi-xu.me/gh/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js",
         "https://gh-proxy.com/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js",
         "https://gh.chjina.com/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
     )
-    # 支持通过环境变量覆盖下载节点（逗号分隔）
+    # Support overriding download mirrors via environment variable (comma-separated)
     if ($env:CURSOR_HOOK_DOWNLOAD_URLS) {
         $hookDownloadUrls = $env:CURSOR_HOOK_DOWNLOAD_URLS -split '\s*,\s*' | Where-Object { $_ }
-        Write-Host "$BLUEℹ️  [Hook]$NC 检测到自定义下载节点列表，将优先使用"
+        Write-Host "$BLUEℹ️  [Hook]$NC Custom download mirror list detected, prioritizing custom mirrors"
     }
     if ($hookSourcePath) {
         try {
             Copy-Item -Path $hookSourcePath -Destination $hookTargetPath -Force
-            Write-Host "$GREEN✅ [Hook]$NC 外置 Hook 已部署: $hookTargetPath"
+            Write-Host "$GREEN✅ [Hook]$NC External Hook deployed: $hookTargetPath"
         } catch {
-            Write-Host "$YELLOW⚠️  [Hook]$NC 本地 Hook 复制失败，尝试在线下载..."
+            Write-Host "$YELLOW⚠️  [Hook]$NC Failed to copy local Hook file, attempting online download..."
         }
     }
     if (-not (Test-Path $hookTargetPath)) {
-        Write-Host "$BLUEℹ️  [Hook]$NC 正在下载外置 Hook，用于设备标识拦截..."
+        Write-Host "$BLUEℹ️  [Hook]$NC Downloading external Hook for device ID interception..."
         $originalProgressPreference = $ProgressPreference
         $ProgressPreference = 'Continue'
         try {
             if ($hookDownloadUrls.Count -eq 0) {
-                Write-Host "$YELLOW⚠️  [Hook]$NC 下载节点列表为空，跳过在线下载"
+                Write-Host "$YELLOW⚠️  [Hook]$NC Download URL list is empty, skipping online download"
             } else {
                 $totalUrls = $hookDownloadUrls.Count
                 for ($i = 0; $i -lt $totalUrls; $i++) {
                     $url = $hookDownloadUrls[$i]
                     $attempt = $i + 1
-                    Write-Host "$BLUE⏳ [Hook]$NC ($attempt/$totalUrls) 当前下载节点: $url"
+                    Write-Host "$BLUE⏳ [Hook]$NC ($attempt/$totalUrls) Current download mirror: $url"
                     try {
                         Invoke-WebRequest -Uri $url -OutFile $hookTargetPath -UseBasicParsing -ErrorAction Stop
-                        Write-Host "$GREEN✅ [Hook]$NC 外置 Hook 已在线下载: $hookTargetPath"
+                        Write-Host "$GREEN✅ [Hook]$NC External Hook downloaded successfully: $hookTargetPath"
                         break
                     } catch {
-                        Write-Host "$YELLOW⚠️  [Hook]$NC 外置 Hook 下载失败: $url"
+                        Write-Host "$YELLOW⚠️  [Hook]$NC External Hook download failed: $url"
                         if (Test-Path $hookTargetPath) {
                             Remove-Item -Path $hookTargetPath -Force
                         }
@@ -530,99 +531,98 @@ function Modify-CursorJSFiles {
             $ProgressPreference = $originalProgressPreference
         }
         if (-not (Test-Path $hookTargetPath)) {
-            Write-Host "$YELLOW⚠️  [Hook]$NC 外置 Hook 全部下载失败"
+            Write-Host "$YELLOW⚠️  [Hook]$NC All external Hook downloads failed"
         }
     }
 
-    # 目标JS文件列表（Windows路径，按优先级排序）
+    # Target JS files (Windows paths, in priority order)
     $jsFiles = @(
         "$cursorAppPath\resources\app\out\main.js",
-        # 共享进程用于聚合 telemetry，需要同步注入
+        # Shared process aggregates telemetry and requires synchronous injection
         "$cursorAppPath\resources\app\out\vs\code\electron-utility\sharedProcess\sharedProcessMain.js"
     )
 
     $modifiedCount = 0
 
-    # 关闭Cursor进程
-    Write-Host "$BLUE🔄 [关闭]$NC 关闭Cursor进程以进行文件修改..."
+    # Stop Cursor processes
+    Write-Host "$BLUE🔄 [Close]$NC Stopping Cursor processes for file modification..."
     Stop-AllCursorProcesses -MaxRetries 3 -WaitSeconds 3 | Out-Null
 
-    # 创建备份目录
+    # Create backup directory
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $backupPath = "$cursorAppPath\resources\app\out\backups"
 
-    Write-Host "$BLUE💾 [备份]$NC 创建Cursor JS文件备份..."
+    Write-Host "$BLUE💾 [Backup]$NC Creating Cursor JS file backups..."
     try {
         New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
 
-        # 检查是否存在原始备份
+        # Check for original backups
         $originalBackup = "$backupPath\main.js.original"
 
         foreach ($file in $jsFiles) {
             if (-not (Test-Path $file)) {
-                Write-Host "$YELLOW⚠️  [警告]$NC 文件不存在: $(Split-Path $file -Leaf)"
+                Write-Host "$YELLOW⚠️  [Warning]$NC File does not exist: $(Split-Path $file -Leaf)"
                 continue
             }
 
             $fileName = Split-Path $file -Leaf
             $fileOriginalBackup = "$backupPath\$fileName.original"
 
-            # 如果原始备份不存在，先创建
+            # Create original backup if not present
             if (-not (Test-Path $fileOriginalBackup)) {
-                # 检查当前文件是否已被修改过
+                # Check if current file has already been modified
                 $content = Get-Content $file -Raw -ErrorAction SilentlyContinue
                 if ($content -and $content -match "__cursor_patched__") {
-                    Write-Host "$YELLOW⚠️  [警告]$NC 文件已被修改但无原始备份，将使用当前版本作为基础"
+                    Write-Host "$YELLOW⚠️  [Warning]$NC File already modified without original backup, using current version as base"
                 }
                 Copy-Item $file $fileOriginalBackup -Force
-                Write-Host "$GREEN✅ [备份]$NC 原始备份创建成功: $fileName"
+                Write-Host "$GREEN✅ [Backup]$NC Original backup created: $fileName"
             } else {
-                # 从原始备份恢复，确保每次都是干净的注入
-                Write-Host "$BLUE🔄 [恢复]$NC 从原始备份恢复: $fileName"
+                # Restore from original backup to ensure clean injection every time
+                Write-Host "$BLUE🔄 [Restore]$NC Restoring from original backup: $fileName"
                 Copy-Item $fileOriginalBackup $file -Force
             }
         }
 
-        # 创建时间戳备份（记录每次修改前的状态）
+        # Create timestamped backup (records state before modification)
         foreach ($file in $jsFiles) {
             if (Test-Path $file) {
                 $fileName = Split-Path $file -Leaf
                 Copy-Item $file "$backupPath\$fileName.backup_$timestamp" -Force
             }
         }
-        Write-Host "$GREEN✅ [备份]$NC 时间戳备份创建成功: $backupPath"
+        Write-Host "$GREEN✅ [Backup]$NC Timestamped backup created: $backupPath"
     } catch {
-        Write-Host "$RED❌ [错误]$NC 创建备份失败: $($_.Exception.Message)"
+        Write-Host "$RED❌ [Error]$NC Backup creation failed: $($_.Exception.Message)"
         return $false
     }
 
-    # 修改JS文件（每次都重新注入，因为已从原始备份恢复）
-    Write-Host "$BLUE🔧 [修改]$NC 开始修改JS文件（使用设备标识符）..."
+    # Modify JS files (re-injecting cleanly since restored from original backup)
+    Write-Host "$BLUE🔧 [Modify]$NC Modifying JS files (applying device identifiers)..."
 
     foreach ($file in $jsFiles) {
         if (-not (Test-Path $file)) {
-            Write-Host "$YELLOW⚠️  [跳过]$NC 文件不存在: $(Split-Path $file -Leaf)"
+            Write-Host "$YELLOW⚠️  [Skip]$NC File does not exist: $(Split-Path $file -Leaf)"
             continue
         }
 
-        Write-Host "$BLUE📝 [处理]$NC 正在处理: $(Split-Path $file -Leaf)"
+        Write-Host "$BLUE📝 [Process]$NC Processing: $(Split-Path $file -Leaf)"
 
         try {
             $content = Get-Content $file -Raw -Encoding UTF8
             $replaced = $false
             $replacedB6 = $false
 
-            # ========== 方法A: someValue占位符替换（稳定锚点） ==========
-            # 这些字符串是固定的占位符，不会被混淆器修改，跨版本稳定
-            # 重要说明：
-            # 当前 Cursor 的 main.js 中占位符通常是以字符串字面量形式出现，例如：
+            # ========== Method A: someValue Placeholder Replacement (Stable Anchor) ==========
+            # These strings are fixed placeholders across versions and are not altered by obfuscators.
+            # Important note:
+            # In Cursor's main.js, placeholders appear as string literals, e.g.:
             #   this.machineId="someValue.machineId"
-            # 如果直接把 someValue.machineId 替换成 "\"<真实值>\""，会形成 ""<真实值>"" 导致 JS 语法错误（Invalid token）。
-            # 因此这里优先替换完整的字符串字面量（包含外层引号），并使用 JSON 字符串字面量确保转义安全。
+            # If someValue.machineId is replaced directly with "\"<value>\"", it results in ""<value>"" causing JS syntax errors.
+            # Therefore, we replace full string literals (including quotes) safely using JSON string encoding.
 
-            # 🔧 新增: firstSessionDate（重置首次会话日期）
+            # firstSessionDate (reset first session date)
             if (-not $firstSessionDateValue) {
-                # 使用 UTC 时间生成 firstSessionDate，避免本地时间却带 Z 的语义错误
                 $firstSessionDateValue = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
             }
 
@@ -637,11 +637,11 @@ function Modify-CursorJSFiles {
 
             foreach ($ph in $placeholders) {
                 $name = $ph.Name
-                $jsonValue = ($ph.Value | ConvertTo-Json -Compress)  # 生成带双引号的 JSON 字符串字面量
+                $jsonValue = ($ph.Value | ConvertTo-Json -Compress)  # Generates double-quoted JSON string literal
 
                 $changed = $false
 
-                # 优先替换带引号的占位符字面量，避免出现 ""abc"" 破坏语法
+                # Prioritize replacing quoted placeholder literals to avoid broken syntax
                 $doubleLiteral = '"' + $name + '"'
                 if ($content.Contains($doubleLiteral)) {
                     $content = $content.Replace($doubleLiteral, $jsonValue)
@@ -653,28 +653,28 @@ function Modify-CursorJSFiles {
                     $changed = $true
                 }
 
-                # 兜底：如果占位符以非字符串字面量形式出现，则替换为 JSON 字符串字面量（自带引号）
+                # Fallback: If placeholder appears unquoted, replace with JSON string literal (includes quotes)
                 if (-not $changed -and $content.Contains($name)) {
                     $content = $content.Replace($name, $jsonValue)
                     $changed = $true
                 }
 
                 if ($changed) {
-                    Write-Host "   $GREEN✓$NC [方案A] 替换 $name"
+                    Write-Host "   $GREEN✓$NC [Method A] Replaced $name"
                     $replaced = $true
                 }
             }
 
-            # ========== 方法B: b6 定点重写（机器码源函数，仅 main.js） ==========
-            # 说明：b6(t) 是 machineId 的核心生成函数，t=true 返回原始值，t=false 返回哈希
+            # ========== Method B: b6 Targeted Rewrite (Machine code source function, main.js only) ==========
+            # Note: b6(t) is the core generation function for machineId: t=true returns raw value, t=false returns hash
             if ((Split-Path $file -Leaf) -eq "main.js") {
-                # ✅ 1+3 融合：限定 out-build/vs/base/node/id.js 模块内做特征匹配 + 花括号配对定位函数边界
-                # 目的：提升跨版本覆盖率，同时避免正则跨模块误吞导致 main.js 语法损坏。
+                # Match within out-build/vs/base/node/id.js module + brace pairing for function boundaries
+                # Purpose: Increase cross-version reliability without risking cross-module syntax corruption.
                 try {
                     $moduleMarker = "out-build/vs/base/node/id.js"
                     $markerIndex = $content.IndexOf($moduleMarker)
                     if ($markerIndex -lt 0) {
-                        throw "未找到 id.js 模块标记"
+                        throw "id.js module marker not found"
                     }
 
                     $windowLen = [Math]::Min($content.Length - $markerIndex, 200000)
@@ -682,10 +682,9 @@ function Modify-CursorJSFiles {
 
                     $hashRegex = [regex]::new('createHash\(["'']sha256["'']\)')
                     $hashMatches = $hashRegex.Matches($windowText)
-                    Write-Host "   $BLUEℹ️  $NC [方案B诊断] id.js偏移=$markerIndex | sha256 createHash 命中=$($hashMatches.Count)"
+                    Write-Host "   $BLUEℹ️  $NC [Method B Diag] id.js offset=$markerIndex | sha256 createHash hits=$($hashMatches.Count)"
                     $patched = $false
                     $diagLines = @()
-                    # 兼容：PowerShell 可展开字符串中 "$var:" 会被当作作用域/驱动器前缀解析，需用 "${var}" 明确变量边界
                     $candidateNo = 0
 
                     foreach ($hm in $hashMatches) {
@@ -693,41 +692,41 @@ function Modify-CursorJSFiles {
                         $hashPos = $hm.Index
                         $funcStart = $windowText.LastIndexOf("async function", $hashPos)
                         if ($funcStart -lt 0) {
-                            if ($candidateNo -le 3) { $diagLines += "候选#${candidateNo}: 未找到 async function 起点" }
+                            if ($candidateNo -le 3) { $diagLines += "Candidate #${candidateNo}: 'async function' start not found" }
                             continue
                         }
 
                         $openBrace = $windowText.IndexOf("{", $funcStart)
                         if ($openBrace -lt 0) {
-                            if ($candidateNo -le 3) { $diagLines += "候选#${candidateNo}: 未找到函数起始花括号" }
+                            if ($candidateNo -le 3) { $diagLines += "Candidate #${candidateNo}: Opening brace not found" }
                             continue
                         }
 
                         $endBrace = Find-JsMatchingBraceEnd -Text $windowText -OpenBraceIndex $openBrace -MaxScan 20000
                         if ($endBrace -lt 0) {
-                            if ($candidateNo -le 3) { $diagLines += "候选#${candidateNo}: 花括号配对失败（扫描上限内未闭合）" }
+                            if ($candidateNo -le 3) { $diagLines += "Candidate #${candidateNo}: Brace matching failed (not closed within scan limit)" }
                             continue
                         }
 
                         $funcText = $windowText.Substring($funcStart, $endBrace - $funcStart + 1)
                         if ($funcText.Length -gt 8000) {
-                            if ($candidateNo -le 3) { $diagLines += "候选#${candidateNo}: 函数体过长 len=$($funcText.Length)，已跳过" }
+                            if ($candidateNo -le 3) { $diagLines += "Candidate #${candidateNo}: Function body too long (len=$($funcText.Length)), skipped" }
                             continue
                         }
 
                         $sig = [regex]::Match($funcText, '^async function (\w+)\((\w+)\)')
                         if (-not $sig.Success) {
-                            if ($candidateNo -le 3) { $diagLines += "候选#${candidateNo}: 未解析到函数签名（async function name(param)）" }
+                            if ($candidateNo -le 3) { $diagLines += "Candidate #${candidateNo}: Failed to parse function signature (async function name(param))" }
                             continue
                         }
                         $fn = $sig.Groups[1].Value
                         $param = $sig.Groups[2].Value
 
-                        # 特征校验：sha256 + hex digest + return param ? raw : hash
+                        # Signature check: sha256 + hex digest + return param ? raw : hash
                         $hasDigest = ($funcText -match '\.digest\(["'']hex["'']\)')
                         $hasReturn = ($funcText -match ('return\s+' + [regex]::Escape($param) + '\?\w+:\w+\}'))
                         if ($candidateNo -le 3) {
-                            $diagLines += "候选#${candidateNo}: $fn($param) len=$($funcText.Length) digest=$hasDigest return=$hasReturn"
+                            $diagLines += "Candidate #${candidateNo}: $fn($param) len=$($funcText.Length) digest=$hasDigest return=$hasReturn"
                         }
                         if (-not $hasDigest) { continue }
                         if (-not $hasReturn) { continue }
@@ -737,36 +736,36 @@ function Modify-CursorJSFiles {
                         $absEnd = $markerIndex + $endBrace
                         $content = $content.Substring(0, $absStart) + $replacement + $content.Substring($absEnd + 1)
 
-                        Write-Host "   $BLUEℹ️  $NC [方案B诊断] 命中候选#${candidateNo}：$fn($param) len=$($funcText.Length)"
-                        Write-Host "   $GREEN✓$NC [方案B] 已重写 $fn($param) 机器码源函数（融合版特征匹配）"
+                        Write-Host "   $BLUEℹ️  $NC [Method B Diag] Matched candidate #${candidateNo}: $fn($param) len=$($funcText.Length)"
+                        Write-Host "   $GREEN✓$NC [Method B] Rewrote $fn($param) machine code source function"
                         $replacedB6 = $true
                         $patched = $true
                         break
                     }
 
                     if (-not $patched) {
-                        Write-Host "   $YELLOW⚠️  $NC [方案B] 未定位到机器码源函数特征，已跳过"
+                        Write-Host "   $YELLOW⚠️  $NC [Method B] Machine code source function signature not found, skipped"
                         foreach ($d in ($diagLines | Select-Object -First 3)) {
-                            Write-Host "      $BLUEℹ️  $NC [方案B诊断] $d"
+                            Write-Host "      $BLUEℹ️  $NC [Method B Diag] $d"
                         }
                     }
                 } catch {
-                    Write-Host "   $YELLOW⚠️  $NC [方案B] 定位失败，已跳过：$($_.Exception.Message)"
+                    Write-Host "   $YELLOW⚠️  $NC [Method B] Locate failed, skipped: $($_.Exception.Message)"
                 }
             }
 
-            # ========== 方法C: Loader Stub 注入 ==========
-            # 说明：主/共享进程仅注入加载器，具体 Hook 逻辑由外置 cursor_hook.js 维护
+            # ========== Method C: Loader Stub Injection ==========
+            # Note: Injects a lightweight loader into main/shared process; hook logic is maintained in external cursor_hook.js
 
             $injectCode = @"
-// ========== Cursor Hook Loader 开始 ==========
+// ========== Cursor Hook Loader Start ==========
 ;(async function(){/*__cursor_patched__*/
 'use strict';
 if (globalThis.__cursor_hook_loaded__) return;
 globalThis.__cursor_hook_loaded__ = true;
 
 try {
-    // 兼容 ESM/CJS：避免使用 import.meta（仅 ESM 支持），统一用动态 import 加载 Hook
+    // ESM/CJS compatibility: Avoid import.meta, dynamically import modules
     var fsMod = await import('fs');
     var pathMod = await import('path');
     var osMod = await import('os');
@@ -784,90 +783,90 @@ try {
         }
     }
 } catch (e) {
-    // 失败静默，避免影响启动
+    // Silently fail to avoid disrupting application startup
 }
 })();
-// ========== Cursor Hook Loader 结束 ==========
+// ========== Cursor Hook Loader End ==========
 
 "@
 
-            # 找到版权声明结束位置并在其后注入（仅注入一次，避免多次插入破坏语法）
+            # Find end of copyright header and inject (inject once only to prevent duplication)
             if ($content -match "__cursor_patched__") {
-                Write-Host "   $YELLOW⚠️  $NC [方案C] 已检测到既有注入标记，跳过重复注入"
+                Write-Host "   $YELLOW⚠️  $NC [Method C] Existing patch tag detected, skipping duplicate injection"
             } elseif ($content -match '(\*/\s*\n)') {
                 $replacement = '$1' + $injectCode
                 $content = [regex]::Replace($content, '(\*/\s*\n)', $replacement, 1)
-                Write-Host "   $GREEN✓$NC [方案C] Loader Stub 已注入（版权声明后，仅首次）"
+                Write-Host "   $GREEN✓$NC [Method C] Loader Stub injected (after copyright header)"
             } else {
-                # 如果没有找到版权声明，则注入到文件开头
+                # Fallback: Inject at the beginning of the file
                 $content = $injectCode + $content
-                Write-Host "   $GREEN✓$NC [方案C] Loader Stub 已注入（文件开头）"
+                Write-Host "   $GREEN✓$NC [Method C] Loader Stub injected (file beginning)"
             }
 
-            # 注入一致性校验：避免重复注入导致语法损坏
+            # Verify patch tag count
             $patchedCount = ([regex]::Matches($content, "__cursor_patched__")).Count
             if ($patchedCount -gt 1) {
-                throw "检测到重复注入标记：$patchedCount"
+                throw "Duplicate injection tag detected: $patchedCount"
             }
 
-            # 写入修改后的内容
+            # Write modified content
             Set-Content -Path $file -Value $content -Encoding UTF8 -NoNewline
 
-            # 汇总本次注入实际生效的方案组合
+            # Summarize applied methods
             $summaryParts = @()
-            if ($replaced) { $summaryParts += "someValue替换" }
-            if ($replacedB6) { $summaryParts += "b6定点重写" }
-            $summaryParts += "Hook加载器"
+            if ($replaced) { $summaryParts += "someValue Replacement" }
+            if ($replacedB6) { $summaryParts += "b6 Targeted Rewrite" }
+            $summaryParts += "Hook Loader"
             $summaryText = ($summaryParts -join " + ")
-            Write-Host "$GREEN✅ [成功]$NC 增强版方案修改成功（$summaryText）"
+            Write-Host "$GREEN✅ [Success]$NC Modified successfully with: $summaryText"
             $modifiedCount++
 
         } catch {
-            Write-Host "$RED❌ [错误]$NC 修改文件失败: $($_.Exception.Message)"
-            # 尝试从备份恢复
+            Write-Host "$RED❌ [Error]$NC File modification failed: $($_.Exception.Message)"
+            # Attempt restore from backup
             $fileName = Split-Path $file -Leaf
             $backupFile = "$backupPath\$fileName.original"
             if (Test-Path $backupFile) {
                 Copy-Item $backupFile $file -Force
-                Write-Host "$YELLOW🔄 [恢复]$NC 已从备份恢复文件"
+                Write-Host "$YELLOW🔄 [Restore]$NC Restored file from backup"
             }
         }
     }
 
     if ($modifiedCount -gt 0) {
         Write-Host ""
-        Write-Host "$GREEN🎉 [完成]$NC 成功修改 $modifiedCount 个JS文件"
-        Write-Host "$BLUE💾 [备份]$NC 原始文件备份位置: $backupPath"
-        Write-Host "$BLUE💡 [说明]$NC 使用增强版三重方案："
-        Write-Host "   • 方案A: someValue占位符替换（稳定锚点，跨版本兼容）"
-        Write-Host "   • 方案B: b6 定点重写（机器码源函数）"
-        Write-Host "   • 方案C: Loader Stub + 外置 Hook（cursor_hook.js）"
-        Write-Host "$BLUE📁 [配置]$NC ID 配置文件: $idsConfigPath"
+        Write-Host "$GREEN🎉 [Complete]$NC Successfully modified $modifiedCount JS file(s)"
+        Write-Host "$BLUE💾 [Backup]$NC Original backup directory: $backupPath"
+        Write-Host "$BLUE💡 [Description]$NC Applied enhanced triple-method approach:"
+        Write-Host "   • Method A: someValue placeholder replacement (stable anchor across versions)"
+        Write-Host "   • Method B: b6 targeted rewrite (machine code source function)"
+        Write-Host "   • Method C: Loader Stub + External Hook (cursor_hook.js)"
+        Write-Host "$BLUE📁 [Config]$NC ID configuration file: $idsConfigPath"
         return $true
     } else {
-        Write-Host "$RED❌ [失败]$NC 没有成功修改任何文件"
+        Write-Host "$RED❌ [Failed]$NC No files were successfully modified"
         return $false
     }
 }
 
 
-# 🚀 新增 Cursor 防掉试用Pro删除文件夹功能
+# 🚀 Cursor trial folder cleanup function
 function Remove-CursorTrialFolders {
     Write-Host ""
-    Write-Host "$GREEN🎯 [核心功能]$NC 正在执行 Cursor 防掉试用Pro删除文件夹..."
-    Write-Host "$BLUE📋 [说明]$NC 此功能将删除指定的Cursor相关文件夹以重置试用状态"
+    Write-Host "$GREEN🎯 [Core Feature]$NC Executing Cursor trial folder cleanup..."
+    Write-Host "$BLUE📋 [Description]$NC This function removes specified Cursor-related directories to reset trial state"
     Write-Host ""
 
-    # 定义需要删除的文件夹路径
+    # Define directories to remove
     $foldersToDelete = @()
 
-    # Windows Administrator 用户路径
+    # Windows Administrator profile paths
     $adminPaths = @(
         "C:\Users\Administrator\.cursor",
         "C:\Users\Administrator\AppData\Roaming\Cursor"
     )
 
-    # 当前用户路径（使用解析后的用户目录和 AppData）
+    # Current user paths (using resolved user directory and AppData)
     $currentUserPaths = @()
     $userProfileRoot = if ($global:CursorUserProfileRoot) { $global:CursorUserProfileRoot } else { [Environment]::GetEnvironmentVariable("USERPROFILE") }
     if ($userProfileRoot) {
@@ -877,11 +876,11 @@ function Remove-CursorTrialFolders {
         $currentUserPaths += $global:CursorAppDataDir
     }
 
-    # 合并所有路径
+    # Combine all paths
     $foldersToDelete += $adminPaths
     $foldersToDelete += $currentUserPaths
 
-    Write-Host "$BLUE📂 [检测]$NC 将检查以下文件夹："
+    Write-Host "$BLUE📂 [Detection]$NC Checking the following directories:"
     foreach ($folder in $foldersToDelete) {
         Write-Host "   📁 $folder"
     }
@@ -891,47 +890,47 @@ function Remove-CursorTrialFolders {
     $skippedCount = 0
     $errorCount = 0
 
-    # 删除指定文件夹
+    # Delete specified folders
     foreach ($folder in $foldersToDelete) {
-        Write-Host "$BLUE🔍 [检查]$NC 检查文件夹: $folder"
+        Write-Host "$BLUE🔍 [Check]$NC Checking folder: $folder"
 
         if (Test-Path $folder) {
             try {
-                Write-Host "$YELLOW⚠️  [警告]$NC 发现文件夹存在，正在删除..."
+                Write-Host "$YELLOW⚠️  [Warning]$NC Found existing folder, deleting..."
                 Remove-Item -Path $folder -Recurse -Force -ErrorAction Stop
-                Write-Host "$GREEN✅ [成功]$NC 已删除文件夹: $folder"
+                Write-Host "$GREEN✅ [Success]$NC Deleted folder: $folder"
                 $deletedCount++
             }
             catch {
-                Write-Host "$RED❌ [错误]$NC 删除文件夹失败: $folder"
-                Write-Host "$RED💥 [详情]$NC 错误信息: $($_.Exception.Message)"
+                Write-Host "$RED❌ [Error]$NC Failed to delete folder: $folder"
+                Write-Host "$RED💥 [Details]$NC Error: $($_.Exception.Message)"
                 $errorCount++
             }
         } else {
-            Write-Host "$YELLOW⏭️  [跳过]$NC 文件夹不存在: $folder"
+            Write-Host "$YELLOW⏭️  [Skip]$NC Folder does not exist: $folder"
             $skippedCount++
         }
         Write-Host ""
     }
 
-    # 显示操作统计
-    Write-Host "$GREEN📊 [统计]$NC 操作完成统计："
-    Write-Host "   ✅ 成功删除: $deletedCount 个文件夹"
-    Write-Host "   ⏭️  跳过处理: $skippedCount 个文件夹"
-    Write-Host "   ❌ 删除失败: $errorCount 个文件夹"
+    # Display operation statistics
+    Write-Host "$GREEN📊 [Stats]$NC Cleanup Summary:"
+    Write-Host "   ✅ Successfully deleted: $deletedCount folder(s)"
+    Write-Host "   ⏭️  Skipped: $skippedCount folder(s)"
+    Write-Host "   ❌ Failed to delete: $errorCount folder(s)"
     Write-Host ""
 
     if ($deletedCount -gt 0) {
-        Write-Host "$GREEN🎉 [完成]$NC Cursor 防掉试用Pro文件夹删除完成！"
+        Write-Host "$GREEN🎉 [Complete]$NC Cursor trial folder cleanup completed!"
 
-        # 🔧 预创建必要的目录结构，避免权限问题
-        Write-Host "$BLUE🔧 [修复]$NC 预创建必要的目录结构以避免权限问题..."
+        # Pre-create required directory structure to avoid permission issues
+        Write-Host "$BLUE🔧 [Fix]$NC Pre-creating required directory structure to avoid permission issues..."
 
         $cursorAppData = $global:CursorAppDataDir
         $cursorLocalAppData = $global:CursorLocalAppDataDir
         $cursorUserProfile = if ($userProfileRoot) { Join-Path $userProfileRoot ".cursor" } else { "$env:USERPROFILE\.cursor" }
 
-        # 创建主要目录
+        # Create main directories
         try {
             if ($cursorAppData -and -not (Test-Path $cursorAppData)) {
                 New-Item -ItemType Directory -Path $cursorAppData -Force | Out-Null
@@ -939,55 +938,55 @@ function Remove-CursorTrialFolders {
             if ($cursorUserProfile -and -not (Test-Path $cursorUserProfile)) {
                 New-Item -ItemType Directory -Path $cursorUserProfile -Force | Out-Null
             }
-            Write-Host "$GREEN✅ [完成]$NC 目录结构预创建完成"
+            Write-Host "$GREEN✅ [Complete]$NC Directory structure pre-created successfully"
         } catch {
-            Write-Host "$YELLOW⚠️  [警告]$NC 预创建目录时出现问题: $($_.Exception.Message)"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Issue encountered while pre-creating directories: $($_.Exception.Message)"
         }
     } else {
-        Write-Host "$YELLOW🤔 [提示]$NC 未找到需要删除的文件夹，可能已经清理过了"
+        Write-Host "$YELLOW🤔 [Tip]$NC No target folders found; they may have already been cleaned"
     }
     Write-Host ""
 }
 
-# 🔄 重启Cursor并等待配置文件生成
+# 🔄 Restart Cursor and wait for configuration file generation
 function Restart-CursorAndWait {
     Write-Host ""
-    Write-Host "$GREEN🔄 [重启]$NC 正在重启Cursor以重新生成配置文件..."
+    Write-Host "$GREEN🔄 [Restart]$NC Restarting Cursor to regenerate configuration files..."
 
     if (-not $global:CursorProcessInfo) {
-        Write-Host "$RED❌ [错误]$NC 未找到Cursor进程信息，无法重启"
+        Write-Host "$RED❌ [Error]$NC Cursor process info not found, unable to restart"
         return $false
     }
 
     $cursorPath = $global:CursorProcessInfo.Path
 
-    # 修复：确保路径是字符串类型
+    # Ensure path is a string type
     if ($cursorPath -is [array]) {
         $cursorPath = $cursorPath[0]
     }
 
-    # 验证路径不为空
+    # Validate path is not empty
     if ([string]::IsNullOrEmpty($cursorPath)) {
-        Write-Host "$RED❌ [错误]$NC Cursor路径为空"
+        Write-Host "$RED❌ [Error]$NC Cursor path is empty"
         return $false
     }
 
-    Write-Host "$BLUE📍 [路径]$NC 使用路径: $cursorPath"
+    Write-Host "$BLUE📍 [Path]$NC Using path: $cursorPath"
 
     if (-not (Test-Path $cursorPath)) {
-        Write-Host "$RED❌ [错误]$NC Cursor可执行文件不存在: $cursorPath"
+        Write-Host "$RED❌ [Error]$NC Cursor executable does not exist: $cursorPath"
 
-        # 尝试重新解析安装路径
+        # Try to re-resolve install path
         $installPath = Resolve-CursorInstallPath -AllowPrompt
         $foundPath = if ($installPath) { Join-Path $installPath "Cursor.exe" } else { $null }
         if ($foundPath -and (Test-Path $foundPath)) {
-            Write-Host "$GREEN💡 [发现]$NC 使用备用路径: $foundPath"
+            Write-Host "$GREEN💡 [Found]$NC Using fallback path: $foundPath"
         } else {
             $foundPath = $null
         }
 
         if (-not $foundPath) {
-            Write-Host "$RED❌ [错误]$NC 无法找到有效的Cursor可执行文件"
+            Write-Host "$RED❌ [Error]$NC Unable to find a valid Cursor executable"
             return $false
         }
 
@@ -995,69 +994,69 @@ function Restart-CursorAndWait {
     }
 
     try {
-        Write-Host "$GREEN🚀 [启动]$NC 正在启动Cursor..."
+        Write-Host "$GREEN🚀 [Launch]$NC Starting Cursor..."
         $process = Start-Process -FilePath $cursorPath -PassThru -WindowStyle Hidden
 
-        Write-Host "$YELLOW⏳ [等待]$NC 等待20秒让Cursor完全启动并生成配置文件..."
+        Write-Host "$YELLOW⏳ [Wait]$NC Waiting 20 seconds for Cursor to fully launch and generate configuration files..."
         Start-Sleep -Seconds 20
 
-        # 检查配置文件是否生成
+        # Check if configuration file was generated
         $configPath = $STORAGE_FILE
         if (-not $configPath) {
-            Write-Host "$RED❌ [错误]$NC 无法解析配置文件路径"
+            Write-Host "$RED❌ [Error]$NC Cannot resolve configuration file path"
             return $false
         }
         $maxWait = 45
         $waited = 0
 
         while (-not (Test-Path $configPath) -and $waited -lt $maxWait) {
-            Write-Host "$YELLOW⏳ [等待]$NC 等待配置文件生成... ($waited/$maxWait 秒)"
+            Write-Host "$YELLOW⏳ [Wait]$NC Waiting for configuration file generation... ($waited/$maxWait s)"
             Start-Sleep -Seconds 1
             $waited++
         }
 
         if (Test-Path $configPath) {
-            Write-Host "$GREEN✅ [成功]$NC 配置文件已生成: $configPath"
+            Write-Host "$GREEN✅ [Success]$NC Configuration file generated: $configPath"
 
-            # 额外等待确保文件完全写入
-            Write-Host "$YELLOW⏳ [等待]$NC 等待5秒确保配置文件完全写入..."
+            # Extra wait to ensure file is completely written
+            Write-Host "$YELLOW⏳ [Wait]$NC Waiting 5 seconds to ensure configuration file is fully written..."
             Start-Sleep -Seconds 5
         } else {
-            Write-Host "$YELLOW⚠️  [警告]$NC 配置文件未在预期时间内生成"
-            Write-Host "$BLUE💡 [提示]$NC 可能需要手动启动Cursor一次来生成配置文件"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Configuration file was not generated within expected time"
+            Write-Host "$BLUE💡 [Tip]$NC You may need to manually launch Cursor once to generate the config file"
         }
 
-        # 强制关闭Cursor
-        Write-Host "$YELLOW🔄 [关闭]$NC 正在关闭Cursor以进行配置修改..."
+        # Force close Cursor
+        Write-Host "$YELLOW🔄 [Close]$NC Closing Cursor for configuration modification..."
         if ($process -and -not $process.HasExited) {
             $process.Kill()
             $process.WaitForExit(5000)
         }
 
-        # 确保所有Cursor进程都关闭
+        # Ensure all Cursor processes are terminated
         Get-Process -Name "Cursor" -ErrorAction SilentlyContinue | Stop-Process -Force
         Get-Process -Name "cursor" -ErrorAction SilentlyContinue | Stop-Process -Force
 
-        Write-Host "$GREEN✅ [完成]$NC Cursor重启流程完成"
+        Write-Host "$GREEN✅ [Complete]$NC Cursor restart workflow complete"
         return $true
 
     } catch {
-        Write-Host "$RED❌ [错误]$NC 重启Cursor失败: $($_.Exception.Message)"
-        Write-Host "$BLUE💡 [调试]$NC 错误详情: $($_.Exception.GetType().FullName)"
+        Write-Host "$RED❌ [Error]$NC Failed to restart Cursor: $($_.Exception.Message)"
+        Write-Host "$BLUE💡 [Debug]$NC Error details: $($_.Exception.GetType().FullName)"
         return $false
     }
 }
 
-# 🔒 强制关闭所有Cursor进程（增强版）
+# 🔒 Force close all Cursor processes (Enhanced)
 function Stop-AllCursorProcesses {
     param(
         [int]$MaxRetries = 3,
         [int]$WaitSeconds = 5
     )
 
-    Write-Host "$BLUE🔒 [进程检查]$NC 正在检查并关闭所有Cursor相关进程..."
+    Write-Host "$BLUE🔒 [Process Check]$NC Checking and terminating all Cursor-related processes..."
 
-    # 定义所有可能的Cursor进程名称
+    # Define all possible Cursor process names
     $cursorProcessNames = @(
         "Cursor",
         "cursor",
@@ -1069,116 +1068,116 @@ function Stop-AllCursorProcesses {
     )
 
     for ($retry = 1; $retry -le $MaxRetries; $retry++) {
-        Write-Host "$BLUE🔍 [检查]$NC 第 $retry/$MaxRetries 次进程检查..."
+        Write-Host "$BLUE🔍 [Check]$NC Process check attempt $retry/$MaxRetries..."
 
         $foundProcesses = @()
         foreach ($processName in $cursorProcessNames) {
             $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
             if ($processes) {
                 $foundProcesses += $processes
-                Write-Host "$YELLOW⚠️  [发现]$NC 进程: $processName (PID: $($processes.Id -join ', '))"
+                Write-Host "$YELLOW⚠️  [Found]$NC Process: $processName (PID: $($processes.Id -join ', '))"
             }
         }
 
         if ($foundProcesses.Count -eq 0) {
-            Write-Host "$GREEN✅ [成功]$NC 所有Cursor进程已关闭"
+            Write-Host "$GREEN✅ [Success]$NC All Cursor processes have been stopped"
             return $true
         }
 
-        Write-Host "$YELLOW🔄 [关闭]$NC 正在关闭 $($foundProcesses.Count) 个Cursor进程..."
+        Write-Host "$YELLOW🔄 [Close]$NC Stopping $($foundProcesses.Count) Cursor process(es)..."
 
-        # 先尝试优雅关闭
+        # Attempt graceful close first
         foreach ($process in $foundProcesses) {
             try {
                 $process.CloseMainWindow() | Out-Null
-                Write-Host "$BLUE  • 优雅关闭: $($process.ProcessName) (PID: $($process.Id))$NC"
+                Write-Host "$BLUE  • Graceful close: $($process.ProcessName) (PID: $($process.Id))$NC"
             } catch {
-                Write-Host "$YELLOW  • 优雅关闭失败: $($process.ProcessName)$NC"
+                Write-Host "$YELLOW  • Graceful close failed: $($process.ProcessName)$NC"
             }
         }
 
         Start-Sleep -Seconds 3
 
-        # 强制终止仍在运行的进程
+        # Force kill remaining processes
         foreach ($processName in $cursorProcessNames) {
             $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
             if ($processes) {
                 foreach ($process in $processes) {
                     try {
                         Stop-Process -Id $process.Id -Force
-                        Write-Host "$RED  • 强制终止: $($process.ProcessName) (PID: $($process.Id))$NC"
+                        Write-Host "$RED  • Forced termination: $($process.ProcessName) (PID: $($process.Id))$NC"
                     } catch {
-                        Write-Host "$RED  • 强制终止失败: $($process.ProcessName)$NC"
+                        Write-Host "$RED  • Forced termination failed: $($process.ProcessName)$NC"
                     }
                 }
             }
         }
 
         if ($retry -lt $MaxRetries) {
-            Write-Host "$YELLOW⏳ [等待]$NC 等待 $WaitSeconds 秒后重新检查..."
+            Write-Host "$YELLOW⏳ [Wait]$NC Waiting $WaitSeconds seconds before re-checking..."
             Start-Sleep -Seconds $WaitSeconds
         }
     }
 
-    Write-Host "$RED❌ [失败]$NC 经过 $MaxRetries 次尝试仍有Cursor进程在运行"
+    Write-Host "$RED❌ [Failed]$NC Cursor processes are still running after $MaxRetries attempts"
     return $false
 }
 
-# 🔐 检查文件权限和锁定状态
+# 🔐 Check file permissions and lock status
 function Test-FileAccessibility {
     param(
         [string]$FilePath
     )
 
-    Write-Host "$BLUE🔐 [权限检查]$NC 检查文件访问权限: $(Split-Path $FilePath -Leaf)"
+    Write-Host "$BLUE🔐 [Permission Check]$NC Checking access permissions: $(Split-Path $FilePath -Leaf)"
 
     if (-not (Test-Path $FilePath)) {
-        Write-Host "$RED❌ [错误]$NC 文件不存在"
+        Write-Host "$RED❌ [Error]$NC File does not exist"
         return $false
     }
 
-    # 检查文件是否被锁定
+    # Check if file is locked
     try {
         $fileStream = [System.IO.File]::Open($FilePath, 'Open', 'ReadWrite', 'None')
         $fileStream.Close()
-        Write-Host "$GREEN✅ [权限]$NC 文件可读写，无锁定"
+        Write-Host "$GREEN✅ [Permission]$NC File is readable and writable, not locked"
         return $true
     } catch [System.IO.IOException] {
-        Write-Host "$RED❌ [锁定]$NC 文件被其他进程锁定: $($_.Exception.Message)"
+        Write-Host "$RED❌ [Locked]$NC File is locked by another process: $($_.Exception.Message)"
         return $false
     } catch [System.UnauthorizedAccessException] {
-        Write-Host "$YELLOW⚠️  [权限]$NC 文件权限受限，尝试修改权限..."
+        Write-Host "$YELLOW⚠️  [Permission]$NC File permission restricted, attempting to fix..."
 
-        # 尝试修改文件权限
+        # Attempt to modify file permissions
         try {
             $file = Get-Item $FilePath
             if ($file.IsReadOnly) {
                 $file.IsReadOnly = $false
-                Write-Host "$GREEN✅ [修复]$NC 已移除只读属性"
+                Write-Host "$GREEN✅ [Fix]$NC Removed read-only attribute"
             }
 
-            # 再次测试
+            # Test again
             $fileStream = [System.IO.File]::Open($FilePath, 'Open', 'ReadWrite', 'None')
             $fileStream.Close()
-            Write-Host "$GREEN✅ [权限]$NC 权限修复成功"
+            Write-Host "$GREEN✅ [Permission]$NC Permissions fixed successfully"
             return $true
         } catch {
-            Write-Host "$RED❌ [权限]$NC 无法修复权限: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Permission]$NC Unable to fix permissions: $($_.Exception.Message)"
             return $false
         }
     } catch {
-        Write-Host "$RED❌ [错误]$NC 未知错误: $($_.Exception.Message)"
+        Write-Host "$RED❌ [Error]$NC Unknown error: $($_.Exception.Message)"
         return $false
     }
 }
 
-# 🧹 Cursor 初始化清理功能（从旧版本移植）
+# 🧹 Cursor initialization cleanup function
 function Invoke-CursorInitialization {
     Write-Host ""
-    Write-Host "$GREEN🧹 [初始化]$NC 正在执行 Cursor 初始化清理..."
+    Write-Host "$GREEN🧹 [Initialize]$NC Running Cursor initialization cleanup..."
     $BASE_PATH = if ($global:CursorAppDataDir) { Join-Path $global:CursorAppDataDir "User" } else { $null }
     if (-not $BASE_PATH) {
-        Write-Host "$RED❌ [错误]$NC 无法解析 Cursor 用户目录，初始化清理终止"
+        Write-Host "$RED❌ [Error]$NC Cannot resolve Cursor user directory; aborting initialization cleanup"
         return
     }
 
@@ -1190,154 +1189,153 @@ function Invoke-CursorInitialization {
     $folderToCleanContents = Join-Path -Path $BASE_PATH -ChildPath "History"
     $folderToDeleteCompletely = Join-Path -Path $BASE_PATH -ChildPath "workspaceStorage"
 
-    Write-Host "$BLUE🔍 [调试]$NC 基础路径: $BASE_PATH"
+    Write-Host "$BLUE🔍 [Debug]$NC Base path: $BASE_PATH"
 
-    # 删除指定文件
+    # Delete specified files
     foreach ($file in $filesToDelete) {
-        Write-Host "$BLUE🔍 [检查]$NC 检查文件: $file"
+        Write-Host "$BLUE🔍 [Check]$NC Checking file: $file"
         if (Test-Path $file) {
             try {
                 Remove-Item -Path $file -Force -ErrorAction Stop
-                Write-Host "$GREEN✅ [成功]$NC 已删除文件: $file"
+                Write-Host "$GREEN✅ [Success]$NC Deleted file: $file"
             }
             catch {
-                Write-Host "$RED❌ [错误]$NC 删除文件 $file 失败: $($_.Exception.Message)"
+                Write-Host "$RED❌ [Error]$NC Failed to delete file $file: $($_.Exception.Message)"
             }
         } else {
-            Write-Host "$YELLOW⚠️  [跳过]$NC 文件不存在，跳过删除: $file"
+            Write-Host "$YELLOW⚠️  [Skip]$NC File does not exist, skipping deletion: $file"
         }
     }
 
-    # 清空指定文件夹内容
-    Write-Host "$BLUE🔍 [检查]$NC 检查待清空文件夹: $folderToCleanContents"
+    # Clear specified folder contents
+    Write-Host "$BLUE🔍 [Check]$NC Checking directory to clear: $folderToCleanContents"
     if (Test-Path $folderToCleanContents) {
         try {
             Get-ChildItem -Path $folderToCleanContents -Recurse | Remove-Item -Force -Recurse -ErrorAction Stop
-            Write-Host "$GREEN✅ [成功]$NC 已清空文件夹内容: $folderToCleanContents"
+            Write-Host "$GREEN✅ [Success]$NC Cleared directory contents: $folderToCleanContents"
         }
         catch {
-            Write-Host "$RED❌ [错误]$NC 清空文件夹 $folderToCleanContents 失败: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Error]$NC Failed to clear directory $folderToCleanContents: $($_.Exception.Message)"
         }
     } else {
-        Write-Host "$YELLOW⚠️  [跳过]$NC 文件夹不存在，跳过清空: $folderToCleanContents"
+        Write-Host "$YELLOW⚠️  [Skip]$NC Directory does not exist, skipping clear: $folderToCleanContents"
     }
 
-    # 完全删除指定文件夹
-    Write-Host "$BLUE🔍 [检查]$NC 检查待删除文件夹: $folderToDeleteCompletely"
+    # Delete specified folder completely
+    Write-Host "$BLUE🔍 [Check]$NC Checking directory to remove completely: $folderToDeleteCompletely"
     if (Test-Path $folderToDeleteCompletely) {
         try {
             Remove-Item -Path $folderToDeleteCompletely -Recurse -Force -ErrorAction Stop
-            Write-Host "$GREEN✅ [成功]$NC 已删除文件夹: $folderToDeleteCompletely"
+            Write-Host "$GREEN✅ [Success]$NC Deleted directory: $folderToDeleteCompletely"
         }
         catch {
-            Write-Host "$RED❌ [错误]$NC 删除文件夹 $folderToDeleteCompletely 失败: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Error]$NC Failed to delete directory $folderToDeleteCompletely: $($_.Exception.Message)"
         }
     } else {
-        Write-Host "$YELLOW⚠️  [跳过]$NC 文件夹不存在，跳过删除: $folderToDeleteCompletely"
+        Write-Host "$YELLOW⚠️  [Skip]$NC Directory does not exist, skipping deletion: $folderToDeleteCompletely"
     }
 
-    Write-Host "$GREEN✅ [完成]$NC Cursor 初始化清理完成"
+    Write-Host "$GREEN✅ [Complete]$NC Cursor initialization cleanup complete"
     Write-Host ""
 }
 
-# 🔧 修改系统注册表 MachineGuid（从旧版本移植）
+# 🔧 Modify system registry MachineGuid
 function Update-MachineGuid {
     try {
-        Write-Host "$BLUE🔧 [注册表]$NC 正在修改系统注册表 MachineGuid..."
+        Write-Host "$BLUE🔧 [Registry]$NC Updating system registry MachineGuid..."
 
-        # 检查注册表路径是否存在，不存在则创建
+        # Check if registry path exists, create if missing
         $registryPath = "HKLM:\SOFTWARE\Microsoft\Cryptography"
         if (-not (Test-Path $registryPath)) {
-            Write-Host "$YELLOW⚠️  [警告]$NC 注册表路径不存在: $registryPath，正在创建..."
+            Write-Host "$YELLOW⚠️  [Warning]$NC Registry path does not exist: $registryPath, creating..."
             New-Item -Path $registryPath -Force | Out-Null
-            Write-Host "$GREEN✅ [信息]$NC 注册表路径创建成功"
+            Write-Host "$GREEN✅ [Info]$NC Registry path created successfully"
         }
 
-        # 获取当前的 MachineGuid，如果不存在则使用空字符串作为默认值
+        # Get current MachineGuid, default to empty string if missing
         $originalGuid = ""
         try {
             $currentGuid = Get-ItemProperty -Path $registryPath -Name MachineGuid -ErrorAction SilentlyContinue
             if ($currentGuid) {
                 $originalGuid = $currentGuid.MachineGuid
-                Write-Host "$GREEN✅ [信息]$NC 当前注册表值："
+                Write-Host "$GREEN✅ [Info]$NC Current registry value:"
                 Write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography"
                 Write-Host "    MachineGuid    REG_SZ    $originalGuid"
             } else {
-                Write-Host "$YELLOW⚠️  [警告]$NC MachineGuid 值不存在，将创建新值"
+                Write-Host "$YELLOW⚠️  [Warning]$NC MachineGuid value does not exist, will create new value"
             }
         } catch {
-            Write-Host "$YELLOW⚠️  [警告]$NC 读取注册表失败: $($_.Exception.Message)"
-            Write-Host "$YELLOW⚠️  [警告]$NC 将尝试创建新的 MachineGuid 值"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Failed to read registry: $($_.Exception.Message)"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Will attempt to create new MachineGuid value"
         }
 
-        # 创建备份文件（仅当原始值存在时）
+        # Create backup file (only if original value exists)
         $backupFile = $null
         if ($originalGuid) {
             $backupFile = "$BACKUP_DIR\MachineGuid_$(Get-Date -Format 'yyyyMMdd_HHmmss').reg"
-            Write-Host "$BLUE💾 [备份]$NC 正在备份注册表..."
+            Write-Host "$BLUE💾 [Backup]$NC Backing up registry key..."
             $backupResult = Start-Process "reg.exe" -ArgumentList "export", "`"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`"", "`"$backupFile`"" -NoNewWindow -Wait -PassThru
 
             if ($backupResult.ExitCode -eq 0) {
-                Write-Host "$GREEN✅ [备份]$NC 注册表项已备份到：$backupFile"
+                Write-Host "$GREEN✅ [Backup]$NC Registry key backed up to: $backupFile"
             } else {
-                Write-Host "$YELLOW⚠️  [警告]$NC 备份创建失败，继续执行..."
+                Write-Host "$YELLOW⚠️  [Warning]$NC Registry backup failed, continuing..."
                 $backupFile = $null
             }
         }
 
-        # 生成新GUID
+        # Generate new GUID
         $newGuid = [System.Guid]::NewGuid().ToString()
-        Write-Host "$BLUE🔄 [生成]$NC 新的 MachineGuid: $newGuid"
+        Write-Host "$BLUE🔄 [Generate]$NC New MachineGuid: $newGuid"
 
-        # 更新或创建注册表值
+        # Update or create registry value
         Set-ItemProperty -Path $registryPath -Name MachineGuid -Value $newGuid -Force -ErrorAction Stop
 
-        # 验证更新
+        # Verify update
         $verifyGuid = (Get-ItemProperty -Path $registryPath -Name MachineGuid -ErrorAction Stop).MachineGuid
         if ($verifyGuid -ne $newGuid) {
-            throw "注册表验证失败：更新后的值 ($verifyGuid) 与预期值 ($newGuid) 不匹配"
+            throw "Registry verification failed: updated value ($verifyGuid) does not match expected value ($newGuid)"
         }
 
-        Write-Host "$GREEN✅ [成功]$NC 注册表更新成功："
+        Write-Host "$GREEN✅ [Success]$NC Registry updated successfully:"
         Write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography"
         Write-Host "    MachineGuid    REG_SZ    $newGuid"
         return $true
     }
     catch {
-        Write-Host "$RED❌ [错误]$NC 注册表操作失败：$($_.Exception.Message)"
+        Write-Host "$RED❌ [Error]$NC Registry operation failed: $($_.Exception.Message)"
 
-        # 尝试恢复备份（如果存在）
+        # Attempt to restore backup if available
         if ($backupFile -and (Test-Path $backupFile)) {
-            Write-Host "$YELLOW🔄 [恢复]$NC 正在从备份恢复..."
+            Write-Host "$YELLOW🔄 [Restore]$NC Restoring from backup..."
             $restoreResult = Start-Process "reg.exe" -ArgumentList "import", "`"$backupFile`"" -NoNewWindow -Wait -PassThru
 
             if ($restoreResult.ExitCode -eq 0) {
-                Write-Host "$GREEN✅ [恢复成功]$NC 已还原原始注册表值"
+                Write-Host "$GREEN✅ [Restored]$NC Original registry value restored successfully"
             } else {
-                Write-Host "$RED❌ [错误]$NC 恢复失败，请手动导入备份文件：$backupFile"
+                Write-Host "$RED❌ [Error]$NC Restore failed. Please manually import backup file: $backupFile"
             }
         } else {
-            Write-Host "$YELLOW⚠️  [警告]$NC 未找到备份文件或备份创建失败，无法自动恢复"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Backup file not found or creation failed; cannot auto-restore"
         }
 
         return $false
     }
 }
 
-# 🚫 禁用 Cursor 自动更新（Windows）
+# 🚫 Disable Cursor Auto-Update (Windows)
 function Disable-CursorAutoUpdate {
     Write-Host ""
-    Write-Host "$BLUE🚫 [禁用更新]$NC 正在尝试禁用 Cursor 自动更新..."
+    Write-Host "$BLUE🚫 [Disable Updates]$NC Attempting to disable Cursor automatic updates..."
 
-    # 检测 Cursor 安装路径（支持自动检测 + 手动兜底）
+    # Detect Cursor installation path (auto-detect + manual fallback)
     $cursorAppPath = Resolve-CursorInstallPath -AllowPrompt
     if (-not $cursorAppPath) {
-        Write-Host "$YELLOW⚠️  [警告]$NC 未找到 Cursor 安装路径，跳过禁用更新"
+        Write-Host "$YELLOW⚠️  [Warning]$NC Cursor install path not found, skipping update disablement"
         return $false
     }
 
-    # 更新配置文件（JSON/YAML）
-    # 兼容修复：PowerShell 不支持把 (if ... ) 当作表达式写进数组里，会报 “if 不是 cmdlet”
+    # Update configuration files (JSON/YAML)
     $updateFiles = @()
     $updateFiles += "$cursorAppPath\resources\app-update.yml"
     $updateFiles += "$cursorAppPath\resources\app\update-config.json"
@@ -1353,19 +1351,19 @@ function Disable-CursorAutoUpdate {
         try {
             Copy-Item $file "$file.bak_$(Get-Date -Format 'yyyyMMdd_HHmmss')" -Force
         } catch {
-            Write-Host "$YELLOW⚠️  [警告]$NC 备份失败: $file"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Backup failed: $file"
         }
 
         if ($file -like "*.yml") {
             Set-Content -Path $file -Value "# update disabled by script $(Get-Date)" -Encoding UTF8
-            Write-Host "$GREEN✅ [完成]$NC 已处理更新配置: $file"
+            Write-Host "$GREEN✅ [Complete]$NC Processed update configuration: $file"
             continue
         }
 
         if ($file -like "*update-config.json") {
             $config = @{ autoCheck = $false; autoDownload = $false }
             $config | ConvertTo-Json -Depth 5 | Set-Content -Path $file -Encoding UTF8
-            Write-Host "$GREEN✅ [完成]$NC 已处理更新配置: $file"
+            Write-Host "$GREEN✅ [Complete]$NC Processed update configuration: $file"
             continue
         }
 
@@ -1381,12 +1379,12 @@ function Disable-CursorAutoUpdate {
                 $settings | Add-Member -MemberType NoteProperty -Name "update.mode" -Value "none" -Force
             }
             $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $file -Encoding UTF8
-            Write-Host "$GREEN✅ [完成]$NC 已处理更新配置: $file"
+            Write-Host "$GREEN✅ [Complete]$NC Processed update configuration: $file"
             continue
         }
     }
 
-    # 尝试禁用更新器可执行文件
+    # Attempt to disable updater executables
     $updaterCandidates = @()
     $updaterCandidates += "$cursorAppPath\Update.exe"
     if ($global:CursorLocalAppDataDir) {
@@ -1400,49 +1398,49 @@ function Disable-CursorAutoUpdate {
         $backup = "$updater.bak_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
         try {
             Move-Item -Path $updater -Destination $backup -Force
-            Write-Host "$GREEN✅ [完成]$NC 已禁用更新器: $updater"
+            Write-Host "$GREEN✅ [Complete]$NC Disabled updater: $updater"
         } catch {
-            Write-Host "$YELLOW⚠️  [警告]$NC 更新器禁用失败: $updater"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Failed to disable updater: $updater"
         }
     }
 
     return $true
 }
 
-# 检查配置文件和环境
+# Check configuration files and environment
 function Test-CursorEnvironment {
     param(
         [string]$Mode = "FULL"
     )
 
     Write-Host ""
-    Write-Host "$BLUE🔍 [环境检查]$NC 正在检查Cursor环境..."
+    Write-Host "$BLUE🔍 [Env Check]$NC Checking Cursor environment..."
 
     $configPath = $STORAGE_FILE
     $cursorAppData = $global:CursorAppDataDir
     $issues = @()
 
-    # 检查配置文件
+    # Check configuration file
     if (-not $configPath) {
-        $issues += "无法解析配置文件路径"
+        $issues += "Cannot resolve configuration file path"
     } elseif (-not (Test-Path $configPath)) {
-        $issues += "配置文件不存在: $configPath"
+        $issues += "Configuration file does not exist: $configPath"
     } else {
         try {
             $content = Get-Content $configPath -Raw -Encoding UTF8 -ErrorAction Stop
             $config = $content | ConvertFrom-Json -ErrorAction Stop
-            Write-Host "$GREEN✅ [检查]$NC 配置文件格式正确"
+            Write-Host "$GREEN✅ [Check]$NC Configuration file format is valid"
         } catch {
-            $issues += "配置文件格式错误: $($_.Exception.Message)"
+            $issues += "Configuration file format error: $($_.Exception.Message)"
         }
     }
 
-    # 检查Cursor目录结构
+    # Check Cursor directory structure
     if (-not $cursorAppData -or -not (Test-Path $cursorAppData)) {
-        $issues += "Cursor应用数据目录不存在: $cursorAppData"
+        $issues += "Cursor application data directory does not exist: $cursorAppData"
     }
 
-    # 检查Cursor安装
+    # Check Cursor installation
     $cursorPaths = @()
     $installPath = Resolve-CursorInstallPath
     if ($installPath) {
@@ -1452,22 +1450,22 @@ function Test-CursorEnvironment {
     $cursorFound = $false
     foreach ($path in $cursorPaths) {
         if (Test-Path $path) {
-            Write-Host "$GREEN✅ [检查]$NC 找到Cursor安装: $path"
+            Write-Host "$GREEN✅ [Check]$NC Found Cursor installation: $path"
             $cursorFound = $true
             break
         }
     }
 
     if (-not $cursorFound) {
-        $issues += "未找到Cursor安装，请确认Cursor已正确安装"
+        $issues += "Cursor installation not found; please confirm Cursor is properly installed"
     }
 
-    # 返回检查结果
+    # Return check results
     if ($issues.Count -eq 0) {
-        Write-Host "$GREEN✅ [环境检查]$NC 所有检查通过"
+        Write-Host "$GREEN✅ [Env Check]$NC All checks passed"
         return @{ Success = $true; Issues = @() }
     } else {
-        Write-Host "$RED❌ [环境检查]$NC 发现 $($issues.Count) 个问题："
+        Write-Host "$RED❌ [Env Check]$NC Found $($issues.Count) issue(s):"
         foreach ($issue in $issues) {
             Write-Host "$RED  • ${issue}$NC"
         }
@@ -1475,73 +1473,73 @@ function Test-CursorEnvironment {
     }
 }
 
-# �🛠️ 修改机器码配置（增强版）
+# 🛠️ Modify machine code configuration (Enhanced)
 function Modify-MachineCodeConfig {
     param(
         [string]$Mode = "FULL"
     )
 
     Write-Host ""
-    Write-Host "$GREEN🛠️  [配置]$NC 正在修改机器码配置..."
+    Write-Host "$GREEN🛠️  [Config]$NC Modifying machine code configuration..."
 
     $configPath = $STORAGE_FILE
     if (-not $configPath) {
-        Write-Host "$RED❌ [错误]$NC 无法解析配置文件路径"
+        Write-Host "$RED❌ [Error]$NC Cannot resolve configuration file path"
         return $false
     }
 
-    # 增强的配置文件检查
+    # Enhanced configuration file check
     if (-not (Test-Path $configPath)) {
-        Write-Host "$RED❌ [错误]$NC 配置文件不存在: $configPath"
+        Write-Host "$RED❌ [Error]$NC Configuration file does not exist: $configPath"
         Write-Host ""
-        Write-Host "$YELLOW💡 [解决方案]$NC 请尝试以下步骤："
-        Write-Host "$BLUE  1️⃣  手动启动Cursor应用程序$NC"
-        Write-Host "$BLUE  2️⃣  等待Cursor完全加载（约30秒）$NC"
-        Write-Host "$BLUE  3️⃣  关闭Cursor应用程序$NC"
-        Write-Host "$BLUE  4️⃣  重新运行此脚本$NC"
+        Write-Host "$YELLOW💡 [Solution]$NC Please try the following steps:"
+        Write-Host "$BLUE  1️⃣  Manually launch the Cursor application$NC"
+        Write-Host "$BLUE  2️⃣  Wait for Cursor to fully load (~30 seconds)$NC"
+        Write-Host "$BLUE  3️⃣  Close the Cursor application$NC"
+        Write-Host "$BLUE  4️⃣  Re-run this script$NC"
         Write-Host ""
-        Write-Host "$YELLOW⚠️  [备选方案]$NC 如果问题持续："
-        Write-Host "$BLUE  • 选择脚本的'重置环境+修改机器码'选项$NC"
-        Write-Host "$BLUE  • 该选项会自动生成配置文件$NC"
+        Write-Host "$YELLOW⚠️  [Alternative]$NC If the issue persists:"
+        Write-Host "$BLUE  • Choose the 'Reset Environment + Modify Machine IDs' option in this script$NC"
+        Write-Host "$BLUE  • That option will automatically regenerate the configuration file$NC"
         Write-Host ""
 
-        # 提供用户选择
-        $userChoice = Read-Host "是否现在尝试启动Cursor生成配置文件？(y/n)"
+        # Provide user prompt
+        $userChoice = Read-Host "Attempt to launch Cursor now to generate config file? (y/n)"
         if ($userChoice -match "^(y|yes)$") {
-            Write-Host "$BLUE🚀 [尝试]$NC 正在尝试启动Cursor..."
+            Write-Host "$BLUE🚀 [Attempt]$NC Attempting to launch Cursor..."
             return Start-CursorToGenerateConfig
         }
 
         return $false
     }
 
-    # 在仅修改机器码模式下也要确保进程完全关闭
+    # Ensure processes are stopped even in Modify-Only mode
     if ($Mode -eq "MODIFY_ONLY") {
-        Write-Host "$BLUE🔒 [安全检查]$NC 即使在仅修改模式下，也需要确保Cursor进程完全关闭"
+        Write-Host "$BLUE🔒 [Security Check]$NC Ensuring Cursor processes are completely closed..."
         if (-not (Stop-AllCursorProcesses -MaxRetries 3 -WaitSeconds 3)) {
-            Write-Host "$RED❌ [错误]$NC 无法关闭所有Cursor进程，修改可能失败"
-            $userChoice = Read-Host "是否强制继续？(y/n)"
+            Write-Host "$RED❌ [Error]$NC Unable to close all Cursor processes; modification may fail"
+            $userChoice = Read-Host "Force continue? (y/n)"
             if ($userChoice -notmatch "^(y|yes)$") {
                 return $false
             }
         }
     }
 
-    # 检查文件权限和锁定状态
+    # Check file permissions and lock status
     if (-not (Test-FileAccessibility -FilePath $configPath)) {
-        Write-Host "$RED❌ [错误]$NC 无法访问配置文件，可能被锁定或权限不足"
+        Write-Host "$RED❌ [Error]$NC Cannot access configuration file; it may be locked or lack permissions"
         return $false
     }
 
-    # 验证配置文件格式并显示结构
+    # Verify configuration file format and display structure
     try {
-        Write-Host "$BLUE🔍 [验证]$NC 检查配置文件格式..."
+        Write-Host "$BLUE🔍 [Verification]$NC Checking configuration file format..."
         $originalContent = Get-Content $configPath -Raw -Encoding UTF8 -ErrorAction Stop
         $config = $originalContent | ConvertFrom-Json -ErrorAction Stop
-        Write-Host "$GREEN✅ [验证]$NC 配置文件格式正确"
+        Write-Host "$GREEN✅ [Verification]$NC Configuration file format is valid"
 
-        # 显示当前配置文件中的相关属性
-        Write-Host "$BLUE📋 [当前配置]$NC 检查现有的遥测属性："
+        # Display current telemetry properties
+        Write-Host "$BLUE📋 [Current Config]$NC Checking existing telemetry properties:"
         $telemetryProperties = @('telemetry.machineId', 'telemetry.macMachineId', 'telemetry.devDeviceId', 'telemetry.sqmId')
         foreach ($prop in $telemetryProperties) {
             if ($config.PSObject.Properties[$prop]) {
@@ -1549,30 +1547,30 @@ function Modify-MachineCodeConfig {
                 $displayValue = if ($value.Length -gt 20) { "$($value.Substring(0,20))..." } else { $value }
                 Write-Host "$GREEN  ✓ ${prop}$NC = $displayValue"
             } else {
-                Write-Host "$YELLOW  - ${prop}$NC (不存在，将创建)"
+                Write-Host "$YELLOW  - ${prop}$NC (does not exist, will be created)"
             }
         }
         Write-Host ""
     } catch {
-        Write-Host "$RED❌ [错误]$NC 配置文件格式错误: $($_.Exception.Message)"
-        Write-Host "$YELLOW💡 [建议]$NC 配置文件可能已损坏，建议选择'重置环境+修改机器码'选项"
+        Write-Host "$RED❌ [Error]$NC Configuration file format error: $($_.Exception.Message)"
+        Write-Host "$YELLOW💡 [Tip]$NC Configuration file may be corrupted; recommend choosing 'Reset Environment + Modify Machine IDs'"
         return $false
     }
 
-    # 实现原子性文件操作和重试机制
+    # Implement atomic file operations and retry mechanism
     $maxRetries = 3
     $retryCount = 0
 
     while ($retryCount -lt $maxRetries) {
         $retryCount++
         Write-Host ""
-        Write-Host "$BLUE🔄 [尝试]$NC 第 $retryCount/$maxRetries 次修改尝试..."
+        Write-Host "$BLUE🔄 [Attempt]$NC Modification attempt $retryCount/$maxRetries..."
 
         try {
-            # 显示操作进度
-            Write-Host "$BLUE⏳ [进度]$NC 1/6 - 生成新的设备标识符..."
+            # Display operation progress
+            Write-Host "$BLUE⏳ [Progress]$NC 1/7 - Generating new device identifiers..."
 
-            # 生成新的ID
+            # Generate new IDs
             $MAC_MACHINE_ID = [System.Guid]::NewGuid().ToString()
             $UUID = [System.Guid]::NewGuid().ToString()
             $prefixBytes = [System.Text.Encoding]::UTF8.GetBytes("auth0|user_")
@@ -1584,13 +1582,13 @@ function Modify-MachineCodeConfig {
             $rng.Dispose()
             $MACHINE_ID = "${prefixHex}${randomPart}"
             $SQM_ID = "{$([System.Guid]::NewGuid().ToString().ToUpper())}"
-            # 🔧 新增: serviceMachineId (用于 storage.serviceMachineId)
+            # serviceMachineId (for storage.serviceMachineId)
             $SERVICE_MACHINE_ID = [System.Guid]::NewGuid().ToString()
-            # 🔧 新增: firstSessionDate (重置首次会话日期，使用 UTC 时间避免本地时间却带 Z 的语义错误)
+            # firstSessionDate (reset first session date, UTC timestamp)
             $FIRST_SESSION_DATE = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
             $SESSION_ID = [System.Guid]::NewGuid().ToString()
 
-            # 共享ID（用于配置与JS注入保持一致）
+            # Shared IDs (ensures config stays consistent with JS injection)
             $global:CursorIds = @{
                 machineId        = $MACHINE_ID
                 macMachineId     = $MAC_MACHINE_ID
@@ -1601,14 +1599,14 @@ function Modify-MachineCodeConfig {
                 macAddress       = "00:11:22:33:44:55"
             }
 
-            Write-Host "$GREEN✅ [进度]$NC 1/7 - 设备标识符生成完成"
+            Write-Host "$GREEN✅ [Progress]$NC 1/7 - Device identifiers generated"
 
-            Write-Host "$BLUE⏳ [进度]$NC 2/7 - 创建备份目录..."
+            Write-Host "$BLUE⏳ [Progress]$NC 2/7 - Creating backup directory..."
 
-            # 备份原始值（增强版）
+            # Backup original values
             $backupDir = $BACKUP_DIR
             if (-not $backupDir) {
-                throw "无法解析备份目录路径"
+                throw "Failed to resolve backup directory path"
             }
             if (-not (Test-Path $backupDir)) {
                 New-Item -ItemType Directory -Path $backupDir -Force -ErrorAction Stop | Out-Null
@@ -1617,32 +1615,31 @@ function Modify-MachineCodeConfig {
             $backupName = "storage.json.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')_retry$retryCount"
             $backupPath = "$backupDir\$backupName"
 
-            Write-Host "$BLUE⏳ [进度]$NC 3/7 - 备份原始配置..."
+            Write-Host "$BLUE⏳ [Progress]$NC 3/7 - Backing up original configuration..."
             Copy-Item $configPath $backupPath -ErrorAction Stop
 
-            # 验证备份是否成功
+            # Verify backup success
             if (Test-Path $backupPath) {
                 $backupSize = (Get-Item $backupPath).Length
                 $originalSize = (Get-Item $configPath).Length
                 if ($backupSize -eq $originalSize) {
-                    Write-Host "$GREEN✅ [进度]$NC 3/7 - 配置备份成功: $backupName"
+                    Write-Host "$GREEN✅ [Progress]$NC 3/7 - Configuration backed up: $backupName"
                 } else {
-                    Write-Host "$YELLOW⚠️  [警告]$NC 备份文件大小不匹配，但继续执行"
+                    Write-Host "$YELLOW⚠️  [Warning]$NC Backup file size mismatch, continuing..."
                 }
             } else {
-                throw "备份文件创建失败"
+                throw "Backup file creation failed"
             }
 
-            Write-Host "$BLUE⏳ [进度]$NC 4/7 - 读取原始配置到内存..."
+            Write-Host "$BLUE⏳ [Progress]$NC 4/7 - Reading original configuration into memory..."
 
-            # 原子性操作：读取原始内容到内存
+            # Atomic operation: read original content into memory
             $originalContent = Get-Content $configPath -Raw -Encoding UTF8 -ErrorAction Stop
             $config = $originalContent | ConvertFrom-Json -ErrorAction Stop
 
-            Write-Host "$BLUE⏳ [进度]$NC 5/7 - 在内存中更新配置..."
+            Write-Host "$BLUE⏳ [Progress]$NC 5/7 - Updating configuration in memory..."
 
-            # 更新配置值（安全方式，确保属性存在）
-            # 🔧 修复: 添加 storage.serviceMachineId 和 telemetry.firstSessionDate
+            # Update configuration values safely
             $propertiesToUpdate = @{
                 'telemetry.machineId' = $MACHINE_ID
                 'telemetry.macMachineId' = $MAC_MACHINE_ID
@@ -1656,33 +1653,32 @@ function Modify-MachineCodeConfig {
                 $key = $property.Key
                 $value = $property.Value
 
-                # 使用 Add-Member 或直接赋值的安全方式
+                # Safely assign or add member
                 if ($config.PSObject.Properties[$key]) {
-                    # 属性存在，直接更新
+                    # Property exists, update directly
                     $config.$key = $value
-                    Write-Host "$BLUE  ✓ 更新属性: ${key}$NC"
+                    Write-Host "$BLUE  ✓ Updated property: ${key}$NC"
                 } else {
-                    # 属性不存在，添加新属性
+                    # Property missing, add new property
                     $config | Add-Member -MemberType NoteProperty -Name $key -Value $value -Force
-                    Write-Host "$BLUE  + 添加属性: ${key}$NC"
+                    Write-Host "$BLUE  + Added property: ${key}$NC"
                 }
             }
 
-            Write-Host "$BLUE⏳ [进度]$NC 6/7 - 原子性写入新配置文件..."
+            Write-Host "$BLUE⏳ [Progress]$NC 6/7 - Writing new configuration file atomically..."
 
-            # 原子性操作：删除原文件，写入新文件
+            # Atomic operation: write to temporary file, then move
             $tempPath = "$configPath.tmp"
             $updatedJson = $config | ConvertTo-Json -Depth 10
 
-            # 写入临时文件
+            # Write to temp file
             [System.IO.File]::WriteAllText($tempPath, $updatedJson, [System.Text.Encoding]::UTF8)
 
-            # 验证临时文件
+            # Verify temp file
             $tempContent = Get-Content $tempPath -Raw -Encoding UTF8 -ErrorAction Stop
             $tempConfig = $tempContent | ConvertFrom-Json -ErrorAction Stop
 
-            # 🔧 关键修复：PowerShell 的 ConvertFrom-Json 会把 ISO-8601 日期字符串自动解析为 DateTime
-            # 为避免“期望值(字符串) vs 实际值(DateTime)”导致的误判，这里对比前做一次值归一化
+            # Normalize values for date comparisons across string vs DateTime
             $toComparableString = {
                 param([object]$v)
                 if ($null -eq $v) { return $null }
@@ -1691,7 +1687,7 @@ function Modify-MachineCodeConfig {
                 return [string]$v
             }
 
-            # 验证所有属性是否正确写入
+            # Verify all properties written correctly
             $tempVerificationPassed = $true
             foreach ($property in $propertiesToUpdate.GetEnumerator()) {
                 $key = $property.Key
@@ -1703,30 +1699,30 @@ function Modify-MachineCodeConfig {
 
                 if ($actualComparable -ne $expectedComparable) {
                     $tempVerificationPassed = $false
-                    Write-Host "$RED  ✗ 临时文件验证失败: ${key}$NC"
+                    Write-Host "$RED  ✗ Temp file verification failed for: ${key}$NC"
                     $expectedType = if ($null -eq $expectedValue) { '<null>' } else { $expectedValue.GetType().FullName }
                     $actualType = if ($null -eq $actualValue) { '<null>' } else { $actualValue.GetType().FullName }
-                    Write-Host "$YELLOW    [调试] 类型: 期望=${expectedType}; 实际=${actualType}$NC"
-                    Write-Host "$YELLOW    [调试] 值(归一化): 期望=${expectedComparable}; 实际=${actualComparable}$NC"
+                    Write-Host "$YELLOW    [Debug] Type: Expected=${expectedType}; Actual=${actualType}$NC"
+                    Write-Host "$YELLOW    [Debug] Normalized value: Expected=${expectedComparable}; Actual=${actualComparable}$NC"
                     break
                 }
             }
 
             if (-not $tempVerificationPassed) {
                 Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
-                throw "临时文件验证失败"
+                throw "Temporary file verification failed"
             }
 
-            # 原子性替换：删除原文件，重命名临时文件
+            # Atomic replace
             Remove-Item $configPath -Force
             Move-Item $tempPath $configPath
 
-            # 设置文件为只读（可选）
+            # Keep writable for future changes
             $file = Get-Item $configPath
-            $file.IsReadOnly = $false  # 保持可写，便于后续修改
+            $file.IsReadOnly = $false
 
-            # 最终验证修改结果
-            Write-Host "$BLUE⏳ [进度]$NC 7/7 - 验证新配置文件..."
+            # Final verification
+            Write-Host "$BLUE⏳ [Progress]$NC 7/7 - Verifying new configuration file..."
 
             $verifyContent = Get-Content $configPath -Raw -Encoding UTF8 -ErrorAction Stop
             $verifyConfig = $verifyContent | ConvertFrom-Json -ErrorAction Stop
@@ -1734,7 +1730,6 @@ function Modify-MachineCodeConfig {
             $verificationPassed = $true
             $verificationResults = @()
 
-            # 安全验证每个属性
             foreach ($property in $propertiesToUpdate.GetEnumerator()) {
                 $key = $property.Key
                 $expectedValue = $property.Value
@@ -1744,26 +1739,26 @@ function Modify-MachineCodeConfig {
                 $actualComparable = & $toComparableString $actualValue
 
                 if ($actualComparable -eq $expectedComparable) {
-                    $verificationResults += "✓ ${key}: 验证通过"
+                    $verificationResults += "✓ ${key}: Verified"
                 } else {
                     $expectedType = if ($null -eq $expectedValue) { '<null>' } else { $expectedValue.GetType().FullName }
                     $actualType = if ($null -eq $actualValue) { '<null>' } else { $actualValue.GetType().FullName }
-                    $verificationResults += "✗ ${key}: 验证失败 (期望类型: ${expectedType}, 实际类型: ${actualType}; 期望: ${expectedComparable}, 实际: ${actualComparable})"
+                    $verificationResults += "✗ ${key}: Verification failed (Expected: ${expectedComparable}, Actual: ${actualComparable})"
                     $verificationPassed = $false
                 }
             }
 
-            # 显示验证结果
-            Write-Host "$BLUE📋 [验证详情]$NC"
+            # Display verification results
+            Write-Host "$BLUE📋 [Verification Details]$NC"
             foreach ($result in $verificationResults) {
                 Write-Host "   $result"
             }
 
             if ($verificationPassed) {
-                Write-Host "$GREEN✅ [成功]$NC 第 $retryCount 次尝试修改成功！"
+                Write-Host "$GREEN✅ [Success]$NC Modification succeeded on attempt $retryCount!"
                 Write-Host ""
-                Write-Host "$GREEN🎉 [完成]$NC 机器码配置修改完成！"
-                Write-Host "$BLUE📋 [详情]$NC 已更新以下标识符："
+                Write-Host "$GREEN🎉 [Complete]$NC Machine code configuration update complete!"
+                Write-Host "$BLUE📋 [Details]$NC Updated identifiers:"
                 Write-Host "   🔹 machineId: $MACHINE_ID"
                 Write-Host "   🔹 macMachineId: $MAC_MACHINE_ID"
                 Write-Host "   🔹 devDeviceId: $UUID"
@@ -1771,116 +1766,109 @@ function Modify-MachineCodeConfig {
                 Write-Host "   🔹 serviceMachineId: $SERVICE_MACHINE_ID"
                 Write-Host "   🔹 firstSessionDate: $FIRST_SESSION_DATE"
                 Write-Host ""
-                Write-Host "$GREEN💾 [备份]$NC 原配置已备份至: $backupName"
+                Write-Host "$GREEN💾 [Backup]$NC Original configuration backed up to: $backupName"
 
-                # 🔧 新增: 修改 machineid 文件
-                Write-Host "$BLUE🔧 [machineid]$NC 正在修改 machineid 文件..."
+                # Update machineid file
+                Write-Host "$BLUE🔧 [machineid]$NC Updating machineid file..."
                 $machineIdFilePath = if ($global:CursorAppDataDir) { Join-Path $global:CursorAppDataDir "machineid" } else { $null }
                 if (-not $machineIdFilePath) {
-                    Write-Host "$YELLOW⚠️  [machineid]$NC 无法解析 machineid 文件路径，跳过修改"
+                    Write-Host "$YELLOW⚠️  [machineid]$NC Cannot resolve machineid file path, skipping update"
                 } else {
                     try {
                         if (Test-Path $machineIdFilePath) {
-                            # 备份原始 machineid 文件
                             $machineIdBackup = "$backupDir\machineid.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
                             Copy-Item $machineIdFilePath $machineIdBackup -Force
-                            Write-Host "$GREEN💾 [备份]$NC machineid 文件已备份: $machineIdBackup"
+                            Write-Host "$GREEN💾 [Backup]$NC machineid file backed up: $machineIdBackup"
                         }
-                        # 写入新的 serviceMachineId 到 machineid 文件
                         [System.IO.File]::WriteAllText($machineIdFilePath, $SERVICE_MACHINE_ID, [System.Text.Encoding]::UTF8)
-                        Write-Host "$GREEN✅ [machineid]$NC machineid 文件修改成功: $SERVICE_MACHINE_ID"
+                        Write-Host "$GREEN✅ [machineid]$NC machineid file updated: $SERVICE_MACHINE_ID"
 
-                        # 设置 machineid 文件为只读
                         $machineIdFile = Get-Item $machineIdFilePath
                         $machineIdFile.IsReadOnly = $true
-                        Write-Host "$GREEN🔒 [保护]$NC machineid 文件已设置为只读"
+                        Write-Host "$GREEN🔒 [Protection]$NC machineid file set to read-only"
                     } catch {
-                        Write-Host "$YELLOW⚠️  [machineid]$NC machineid 文件修改失败: $($_.Exception.Message)"
-                        Write-Host "$BLUE💡 [提示]$NC 可手动修改文件: $machineIdFilePath"
+                        Write-Host "$YELLOW⚠️  [machineid]$NC Failed to update machineid file: $($_.Exception.Message)"
+                        Write-Host "$BLUE💡 [Tip]$NC You can manually edit file: $machineIdFilePath"
                     }
                 }
 
-                # 🔧 新增: 修改 .updaterId 文件（更新器设备标识符）
-                Write-Host "$BLUE🔧 [updaterId]$NC 正在修改 .updaterId 文件..."
+                # Update .updaterId file
+                Write-Host "$BLUE🔧 [updaterId]$NC Updating .updaterId file..."
                 $updaterIdFilePath = if ($global:CursorAppDataDir) { Join-Path $global:CursorAppDataDir ".updaterId" } else { $null }
                 if (-not $updaterIdFilePath) {
-                    Write-Host "$YELLOW⚠️  [updaterId]$NC 无法解析 .updaterId 文件路径，跳过修改"
+                    Write-Host "$YELLOW⚠️  [updaterId]$NC Cannot resolve .updaterId file path, skipping update"
                 } else {
                     try {
                         if (Test-Path $updaterIdFilePath) {
-                            # 备份原始 .updaterId 文件
                             $updaterIdBackup = "$backupDir\.updaterId.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
                             Copy-Item $updaterIdFilePath $updaterIdBackup -Force
-                            Write-Host "$GREEN💾 [备份]$NC .updaterId 文件已备份: $updaterIdBackup"
+                            Write-Host "$GREEN💾 [Backup]$NC .updaterId file backed up: $updaterIdBackup"
                         }
-                        # 生成新的 updaterId（UUID格式）
                         $newUpdaterId = [System.Guid]::NewGuid().ToString()
                         [System.IO.File]::WriteAllText($updaterIdFilePath, $newUpdaterId, [System.Text.Encoding]::UTF8)
-                        Write-Host "$GREEN✅ [updaterId]$NC .updaterId 文件修改成功: $newUpdaterId"
+                        Write-Host "$GREEN✅ [updaterId]$NC .updaterId file updated: $newUpdaterId"
 
-                        # 设置 .updaterId 文件为只读
                         $updaterIdFile = Get-Item $updaterIdFilePath
                         $updaterIdFile.IsReadOnly = $true
-                        Write-Host "$GREEN🔒 [保护]$NC .updaterId 文件已设置为只读"
+                        Write-Host "$GREEN🔒 [Protection]$NC .updaterId file set to read-only"
                     } catch {
-                        Write-Host "$YELLOW⚠️  [updaterId]$NC .updaterId 文件修改失败: $($_.Exception.Message)"
-                        Write-Host "$BLUE💡 [提示]$NC 可手动修改文件: $updaterIdFilePath"
+                        Write-Host "$YELLOW⚠️  [updaterId]$NC Failed to update .updaterId file: $($_.Exception.Message)"
+                        Write-Host "$BLUE💡 [Tip]$NC You can manually edit file: $updaterIdFilePath"
                     }
                 }
 
-                # 🔒 添加配置文件保护机制
-                Write-Host "$BLUE🔒 [保护]$NC 正在设置配置文件保护..."
+                # Add configuration file protection
+                Write-Host "$BLUE🔒 [Protection]$NC Setting configuration file protection..."
                 try {
                     $configFile = Get-Item $configPath
                     $configFile.IsReadOnly = $true
-                    Write-Host "$GREEN✅ [保护]$NC 配置文件已设置为只读，防止Cursor覆盖修改"
-                    Write-Host "$BLUE💡 [提示]$NC 文件路径: $configPath"
+                    Write-Host "$GREEN✅ [Protection]$NC Configuration file set to read-only to prevent Cursor overwrite"
+                    Write-Host "$BLUE💡 [Tip]$NC File path: $configPath"
                 } catch {
-                    Write-Host "$YELLOW⚠️  [保护]$NC 设置只读属性失败: $($_.Exception.Message)"
-                    Write-Host "$BLUE💡 [建议]$NC 可手动右键文件 → 属性 → 勾选'只读'"
+                    Write-Host "$YELLOW⚠️  [Protection]$NC Failed to set read-only attribute: $($_.Exception.Message)"
+                    Write-Host "$BLUE💡 [Tip]$NC You can manually right-click file -> Properties -> check 'Read-only'"
                 }
-                Write-Host "$BLUE 🔒 [安全]$NC 建议重启Cursor以确保配置生效"
+                Write-Host "$BLUE🔒 [Security]$NC Please restart Cursor to ensure new configuration takes effect"
                 return $true
             } else {
-                Write-Host "$RED❌ [失败]$NC 第 $retryCount 次尝试验证失败"
+                Write-Host "$RED❌ [Failed]$NC Verification failed on attempt $retryCount"
                 if ($retryCount -lt $maxRetries) {
-                    Write-Host "$BLUE🔄 [恢复]$NC 恢复备份，准备重试..."
+                    Write-Host "$BLUE🔄 [Restore]$NC Restoring backup, preparing retry..."
                     Copy-Item $backupPath $configPath -Force
                     Start-Sleep -Seconds 2
-                    continue  # 继续下一次重试
+                    continue
                 } else {
-                    Write-Host "$RED❌ [最终失败]$NC 所有重试都失败，恢复原始配置"
+                    Write-Host "$RED❌ [Final Failure]$NC All retries failed, restoring original configuration"
                     Copy-Item $backupPath $configPath -Force
                     return $false
                 }
             }
 
         } catch {
-            Write-Host "$RED❌ [异常]$NC 第 $retryCount 次尝试出现异常: $($_.Exception.Message)"
-            Write-Host "$BLUE💡 [调试信息]$NC 错误类型: $($_.Exception.GetType().FullName)"
+            Write-Host "$RED❌ [Exception]$NC Exception on attempt $retryCount: $($_.Exception.Message)"
+            Write-Host "$BLUE💡 [Debug Info]$NC Error type: $($_.Exception.GetType().FullName)"
 
-            # 清理临时文件
+            # Clean temporary file
             if (Test-Path "$configPath.tmp") {
                 Remove-Item "$configPath.tmp" -Force -ErrorAction SilentlyContinue
             }
 
             if ($retryCount -lt $maxRetries) {
-                Write-Host "$BLUE🔄 [恢复]$NC 恢复备份，准备重试..."
+                Write-Host "$BLUE🔄 [Restore]$NC Restoring backup, preparing retry..."
                 if (Test-Path $backupPath) {
                     Copy-Item $backupPath $configPath -Force
                 }
                 Start-Sleep -Seconds 3
-                continue  # 继续下一次重试
+                continue
             } else {
-                Write-Host "$RED❌ [最终失败]$NC 所有重试都失败"
-                # 尝试恢复备份
+                Write-Host "$RED❌ [Final Failure]$NC All retry attempts failed"
                 if (Test-Path $backupPath) {
-                    Write-Host "$BLUE🔄 [恢复]$NC 正在恢复备份配置..."
+                    Write-Host "$BLUE🔄 [Restore]$NC Restoring backup configuration..."
                     try {
                         Copy-Item $backupPath $configPath -Force
-                        Write-Host "$GREEN✅ [恢复]$NC 已恢复原始配置"
+                        Write-Host "$GREEN✅ [Restore]$NC Restored original configuration"
                     } catch {
-                        Write-Host "$RED❌ [错误]$NC 恢复备份失败: $($_.Exception.Message)"
+                        Write-Host "$RED❌ [Error]$NC Failed to restore backup: $($_.Exception.Message)"
                     }
                 }
                 return $false
@@ -1888,39 +1876,37 @@ function Modify-MachineCodeConfig {
         }
     }
 
-    # 如果到达这里，说明所有重试都失败了
-    Write-Host "$RED❌ [最终失败]$NC 经过 $maxRetries 次尝试仍无法完成修改"
+    Write-Host "$RED❌ [Final Failure]$NC Unable to complete modifications after $maxRetries attempts"
     return $false
-
 }
 
-#  启动Cursor生成配置文件
+# Launch Cursor to generate configuration files
 function Start-CursorToGenerateConfig {
-    Write-Host "$BLUE🚀 [启动]$NC 正在尝试启动Cursor生成配置文件..."
+    Write-Host "$BLUE🚀 [Launch]$NC Attempting to launch Cursor to generate configuration..."
 
-    # 查找Cursor可执行文件（支持自动检测 + 手动兜底）
+    # Locate Cursor executable (auto-detect + manual fallback)
     $installPath = Resolve-CursorInstallPath -AllowPrompt
     $cursorPath = if ($installPath) { Join-Path $installPath "Cursor.exe" } else { $null }
 
     if (-not $cursorPath) {
-        Write-Host "$RED❌ [错误]$NC 未找到Cursor安装，请确认Cursor已正确安装"
+        Write-Host "$RED❌ [Error]$NC Cursor installation not found. Please ensure Cursor is properly installed"
         return $false
     }
 
     try {
-        Write-Host "$BLUE📍 [路径]$NC 使用Cursor路径: $cursorPath"
+        Write-Host "$BLUE📍 [Path]$NC Using Cursor path: $cursorPath"
 
-        # 启动Cursor
+        # Start Cursor
         $process = Start-Process -FilePath $cursorPath -PassThru -WindowStyle Normal
-        Write-Host "$GREEN🚀 [启动]$NC Cursor已启动，PID: $($process.Id)"
+        Write-Host "$GREEN🚀 [Launch]$NC Cursor started with PID: $($process.Id)"
 
-        Write-Host "$YELLOW⏳ [等待]$NC 请等待Cursor完全加载（约30秒）..."
-        Write-Host "$BLUE💡 [提示]$NC 您可以在Cursor完全加载后手动关闭它"
+        Write-Host "$YELLOW⏳ [Wait]$NC Please wait for Cursor to fully load (~30 seconds)..."
+        Write-Host "$BLUE💡 [Tip]$NC You may manually close Cursor after it loads"
 
-        # 等待配置文件生成
+        # Wait for configuration file generation
         $configPath = $STORAGE_FILE
         if (-not $configPath) {
-            Write-Host "$RED❌ [错误]$NC 无法解析配置文件路径"
+            Write-Host "$RED❌ [Error]$NC Cannot resolve configuration file path"
             return $false
         }
         $maxWait = 60
@@ -1930,27 +1916,27 @@ function Start-CursorToGenerateConfig {
             Start-Sleep -Seconds 2
             $waited += 2
             if ($waited % 10 -eq 0) {
-                Write-Host "$YELLOW⏳ [等待]$NC 等待配置文件生成... ($waited/$maxWait 秒)"
+                Write-Host "$YELLOW⏳ [Wait]$NC Waiting for configuration file to generate... ($waited/$maxWait s)"
             }
         }
 
         if (Test-Path $configPath) {
-            Write-Host "$GREEN✅ [成功]$NC 配置文件已生成！"
-            Write-Host "$BLUE💡 [提示]$NC 现在可以关闭Cursor并重新运行脚本"
+            Write-Host "$GREEN✅ [Success]$NC Configuration file generated successfully!"
+            Write-Host "$BLUE💡 [Tip]$NC You can now close Cursor and re-run the script"
             return $true
         } else {
-            Write-Host "$YELLOW⚠️  [超时]$NC 配置文件未在预期时间内生成"
-            Write-Host "$BLUE💡 [建议]$NC 请手动操作Cursor（如创建新文件）以触发配置生成"
+            Write-Host "$YELLOW⚠️  [Timeout]$NC Configuration file was not generated within the expected time"
+            Write-Host "$BLUE💡 [Tip]$NC Please interact with Cursor (e.g., create a new file) to trigger configuration generation"
             return $false
         }
 
     } catch {
-        Write-Host "$RED❌ [错误]$NC 启动Cursor失败: $($_.Exception.Message)"
+        Write-Host "$RED❌ [Error]$NC Failed to launch Cursor: $($_.Exception.Message)"
         return $false
     }
 }
 
-# 检查管理员权限
+# Check administrator privileges
 function Test-Administrator {
     $user = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($user)
@@ -1958,13 +1944,13 @@ function Test-Administrator {
 }
 
 if (-not (Test-Administrator)) {
-    Write-Host "$RED[错误]$NC 请以管理员身份运行此脚本"
-    Write-Host "请右键点击脚本，选择'以管理员身份运行'"
-    Read-Host "按回车键退出"
+    Write-Host "$RED[Error]$NC Please run this script as Administrator"
+    Write-Host "Right-click the script and select 'Run with PowerShell as Administrator'"
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
-# 显示 Logo
+# Display Logo & Banner
 Clear-Host
 Write-Host @"
 
@@ -1976,163 +1962,159 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host "$BLUE================================$NC"
-Write-Host "$GREEN🚀   Cursor 防掉试用Pro删除工具          $NC"
-Write-Host "$YELLOW📱  关注公众号【煎饼果子卷AI】 $NC"
-Write-Host "$YELLOW🤝  一起交流更多Cursor技巧和AI知识(脚本免费、关注公众号加群有更多技巧和大佬)  $NC"
-Write-Host "$YELLOW💡  [重要提示] 本工具免费，如果对您有帮助，请关注公众号【煎饼果子卷AI】  $NC"
-Write-Host ""
-Write-Host "$YELLOW⚡  [小小广告] Cursor官网正规成品号：Unlimited ♾️ ¥1050 | 7天周卡 $100 ¥210 | 7天周卡 $500 ¥1050 | 7天周卡 $1000 ¥2450 | 全部7天质保 | ，WeChat：JavaRookie666  $NC"
-Write-Host "$BLUE================================$NC"
-
-# 🎯 用户选择菜单
-Write-Host ""
-Write-Host "$GREEN🎯 [选择模式]$NC 请选择您要执行的操作："
-Write-Host ""
-Write-Host "$BLUE  1️⃣  仅修改机器码$NC"
-Write-Host "$YELLOW      • 执行机器码修改功能$NC"
-Write-Host "$YELLOW      • 执行注入破解JS代码到核心文件$NC"
-Write-Host "$YELLOW      • 跳过文件夹删除/环境重置步骤$NC"
-Write-Host "$YELLOW      • 保留现有Cursor配置和数据$NC"
-Write-Host ""
-Write-Host "$BLUE  2️⃣  重置环境+修改机器码$NC"
-Write-Host "$RED      • 执行完全环境重置（删除Cursor文件夹）$NC"
-Write-Host "$RED      • ⚠️  配置将丢失，请注意备份$NC"
-Write-Host "$YELLOW      • 按照机器代码修改$NC"
-Write-Host "$YELLOW      • 执行注入破解JS代码到核心文件$NC"
-Write-Host "$YELLOW      • 这相当于当前的完整脚本行为$NC"
+Write-Host "$BLUE========================================$NC"
+Write-Host "$GREEN🚀   Cursor Machine ID Modifier & Reset Tool  $NC"
+Write-Host "$BLUE========================================$NC"
 Write-Host ""
 
-# 获取用户选择
+# 🎯 User Selection Menu
+Write-Host ""
+Write-Host "$GREEN🎯 [Select Mode]$NC Please select an operation:"
+Write-Host ""
+Write-Host "$BLUE  1️⃣  Modify Machine IDs Only$NC"
+Write-Host "$YELLOW      • Modifies machine telemetry identifiers$NC"
+Write-Host "$YELLOW      • Injects device ID bypass hook into core JS files$NC"
+Write-Host "$YELLOW      • Skips folder deletion / environment reset$NC"
+Write-Host "$YELLOW      • Preserves existing Cursor settings and data$NC"
+Write-Host ""
+Write-Host "$BLUE  2️⃣  Reset Environment + Modify Machine IDs$NC"
+Write-Host "$RED      • Performs complete environment reset (deletes Cursor trial folders)$NC"
+Write-Host "$RED      • ⚠️  Settings will be reset, please ensure backups$NC"
+Write-Host "$YELLOW      • Modifies machine telemetry identifiers$NC"
+Write-Host "$YELLOW      • Injects device ID bypass hook into core JS files$NC"
+Write-Host "$YELLOW      • Recommended for a full clean reset$NC"
+Write-Host ""
+
+# Get user selection
 do {
-    $userChoice = Read-Host "请输入选择 (1 或 2)"
+    $userChoice = Read-Host "Please enter your choice (1 or 2)"
     if ($userChoice -eq "1") {
-        Write-Host "$GREEN✅ [选择]$NC 您选择了：仅修改机器码"
+        Write-Host "$GREEN✅ [Selected]$NC You selected: Modify Machine IDs Only"
         $executeMode = "MODIFY_ONLY"
         break
     } elseif ($userChoice -eq "2") {
-        Write-Host "$GREEN✅ [选择]$NC 您选择了：重置环境+修改机器码"
-        Write-Host "$RED⚠️  [重要警告]$NC 此操作将删除所有Cursor配置文件！"
-        $confirmReset = Read-Host "确认执行完全重置？(输入 yes 确认，其他任意键取消)"
+        Write-Host "$GREEN✅ [Selected]$NC You selected: Reset Environment + Modify Machine IDs"
+        Write-Host "$RED⚠️  [Important Warning]$NC This operation will delete Cursor trial/configuration folders!"
+        $confirmReset = Read-Host "Confirm full reset? (Type 'yes' to confirm, any other key to cancel)"
         if ($confirmReset -eq "yes") {
             $executeMode = "RESET_AND_MODIFY"
             break
         } else {
-            Write-Host "$YELLOW👋 [取消]$NC 用户取消重置操作"
+            Write-Host "$YELLOW👋 [Cancelled]$NC Full reset cancelled by user"
             continue
         }
     } else {
-        Write-Host "$RED❌ [错误]$NC 无效选择，请输入 1 或 2"
+        Write-Host "$RED❌ [Error]$NC Invalid choice, please enter 1 or 2"
     }
 } while ($true)
 
 Write-Host ""
 
-# 📋 根据选择显示执行流程说明
+# 📋 Display execution workflow based on selection
 if ($executeMode -eq "MODIFY_ONLY") {
-    Write-Host "$GREEN📋 [执行流程]$NC 仅修改机器码模式将按以下步骤执行："
-    Write-Host "$BLUE  1️⃣  检测Cursor配置文件$NC"
-    Write-Host "$BLUE  2️⃣  备份现有配置文件$NC"
-    Write-Host "$BLUE  3️⃣  修改机器码配置$NC"
-    Write-Host "$BLUE  4️⃣  显示操作完成信息$NC"
+    Write-Host "$GREEN📋 [Execution Flow]$NC Modify Machine IDs Only mode will execute the following steps:"
+    Write-Host "$BLUE  1️⃣  Detect Cursor configuration file$NC"
+    Write-Host "$BLUE  2️⃣  Backup existing configuration file$NC"
+    Write-Host "$BLUE  3️⃣  Update machine code configuration$NC"
+    Write-Host "$BLUE  4️⃣  Display operation completion summary$NC"
     Write-Host ""
-    Write-Host "$YELLOW⚠️  [注意事项]$NC"
-    Write-Host "$YELLOW  • 不会删除任何文件夹或重置环境$NC"
-    Write-Host "$YELLOW  • 保留所有现有配置和数据$NC"
-    Write-Host "$YELLOW  • 原配置文件会自动备份$NC"
+    Write-Host "$YELLOW⚠️  [Important Notes]$NC"
+    Write-Host "$YELLOW  • Will not delete folders or reset environment$NC"
+    Write-Host "$YELLOW  • Preserves all existing configurations and data$NC"
+    Write-Host "$YELLOW  • Original configuration file is automatically backed up$NC"
 } else {
-    Write-Host "$GREEN📋 [执行流程]$NC 重置环境+修改机器码模式将按以下步骤执行："
-    Write-Host "$BLUE  1️⃣  检测并关闭Cursor进程$NC"
-    Write-Host "$BLUE  2️⃣  保存Cursor程序路径信息$NC"
-    Write-Host "$BLUE  3️⃣  删除指定的Cursor试用相关文件夹$NC"
+    Write-Host "$GREEN📋 [Execution Flow]$NC Reset Environment + Modify Machine IDs mode will execute the following steps:"
+    Write-Host "$BLUE  1️⃣  Detect and terminate Cursor processes$NC"
+    Write-Host "$BLUE  2️⃣  Save Cursor application path information$NC"
+    Write-Host "$BLUE  3️⃣  Delete specified Cursor trial-related folders$NC"
     Write-Host "$BLUE      📁 C:\Users\Administrator\.cursor$NC"
     Write-Host "$BLUE      📁 C:\Users\Administrator\AppData\Roaming\Cursor$NC"
     Write-Host "$BLUE      📁 C:\Users\%USERNAME%\.cursor$NC"
     Write-Host "$BLUE      📁 C:\Users\%USERNAME%\AppData\Roaming\Cursor$NC"
-    Write-Host "$BLUE  3.5️⃣ 预创建必要目录结构，避免权限问题$NC"
-    Write-Host "$BLUE  4️⃣  重新启动Cursor让其生成新的配置文件$NC"
-    Write-Host "$BLUE  5️⃣  等待配置文件生成完成（最多45秒）$NC"
-    Write-Host "$BLUE  6️⃣  关闭Cursor进程$NC"
-    Write-Host "$BLUE  7️⃣  修改新生成的机器码配置文件$NC"
-    Write-Host "$BLUE  8️⃣  显示操作完成统计信息$NC"
+    Write-Host "$BLUE  3.5️⃣ Pre-create required directory structure to avoid permission issues$NC"
+    Write-Host "$BLUE  4️⃣  Restart Cursor to generate fresh configuration files$NC"
+    Write-Host "$BLUE  5️⃣  Wait for configuration file generation (up to 45s)$NC"
+    Write-Host "$BLUE  6️⃣  Stop Cursor processes$NC"
+    Write-Host "$BLUE  7️⃣  Modify newly generated machine code configuration$NC"
+    Write-Host "$BLUE  8️⃣  Display operation completion statistics$NC"
     Write-Host ""
-    Write-Host "$YELLOW⚠️  [注意事项]$NC"
-    Write-Host "$YELLOW  • 脚本执行过程中请勿手动操作Cursor$NC"
-    Write-Host "$YELLOW  • 建议在执行前关闭所有Cursor窗口$NC"
-    Write-Host "$YELLOW  • 执行完成后需要重新启动Cursor$NC"
-    Write-Host "$YELLOW  • 原配置文件会自动备份到backups文件夹$NC"
+    Write-Host "$YELLOW⚠️  [Important Notes]$NC"
+    Write-Host "$YELLOW  • Do not manually interact with Cursor during script execution$NC"
+    Write-Host "$YELLOW  • Recommend closing all Cursor windows before starting$NC"
+    Write-Host "$YELLOW  • Restart Cursor after execution completes$NC"
+    Write-Host "$YELLOW  • Original configuration is automatically backed up to the backups folder$NC"
 }
 Write-Host ""
 
-# 🤔 用户确认
-Write-Host "$GREEN🤔 [确认]$NC 请确认您已了解上述执行流程"
-$confirmation = Read-Host "是否继续执行？(输入 y 或 yes 继续，其他任意键退出)"
+# 🤔 User Confirmation
+Write-Host "$GREEN🤔 [Confirmation]$NC Please confirm that you have reviewed the execution flow above"
+$confirmation = Read-Host "Continue execution? (Type 'y' or 'yes' to continue, any other key to exit)"
 if ($confirmation -notmatch "^(y|yes)$") {
-    Write-Host "$YELLOW👋 [退出]$NC 用户取消执行，脚本退出"
-    Read-Host "按回车键退出"
+    Write-Host "$YELLOW👋 [Exit]$NC Execution cancelled by user. Exiting script..."
+    Read-Host "Press Enter to exit"
     exit 0
 }
-Write-Host "$GREEN✅ [确认]$NC 用户确认继续执行"
+Write-Host "$GREEN✅ [Confirmed]$NC User confirmed to proceed"
 Write-Host ""
 
-# 获取并显示 Cursor 版本
+# Retrieve and display Cursor version
 function Get-CursorVersion {
     try {
-        # 主要检测路径（基于安装路径解析）
+        # Primary detection path (based on resolved install path)
         $installPath = Resolve-CursorInstallPath
         $packagePath = if ($installPath) { Join-Path $installPath "resources\app\package.json" } else { $null }
         if ($packagePath -and (Test-Path $packagePath)) {
             $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "$GREEN[信息]$NC 当前安装的 Cursor 版本: v$($packageJson.version)"
+                Write-Host "$GREEN[Info]$NC Currently installed Cursor version: v$($packageJson.version)"
                 return $packageJson.version
             }
         }
 
-        # 备用路径检测（兼容旧目录结构）
+        # Fallback path detection (compatibility with older directory structures)
         $altPath = if ($global:CursorLocalAppDataRoot) { Join-Path $global:CursorLocalAppDataRoot "cursor\resources\app\package.json" } else { $null }
         if ($altPath -and (Test-Path $altPath)) {
             $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "$GREEN[信息]$NC 当前安装的 Cursor 版本: v$($packageJson.version)"
+                Write-Host "$GREEN[Info]$NC Currently installed Cursor version: v$($packageJson.version)"
                 return $packageJson.version
             }
         }
 
-        Write-Host "$YELLOW[警告]$NC 无法检测到 Cursor 版本"
-        Write-Host "$YELLOW[提示]$NC 请确保 Cursor 已正确安装"
+        Write-Host "$YELLOW[Warning]$NC Unable to detect Cursor version"
+        Write-Host "$YELLOW[Tip]$NC Please ensure Cursor is properly installed"
         return $null
     }
     catch {
-        Write-Host "$RED[错误]$NC 获取 Cursor 版本失败: $_"
+        Write-Host "$RED[Error]$NC Failed to retrieve Cursor version: $_"
         return $null
     }
 }
 
-# 获取并显示版本信息
+# Display version information
 $cursorVersion = Get-CursorVersion
 Write-Host ""
 
-Write-Host "$YELLOW💡 [重要提示]$NC 最新的 1.0.x 版本已支持"
+Write-Host "$YELLOW💡 [Tip]$NC Latest 1.0.x versions supported"
 
 Write-Host ""
 
-# 🔍 检查并关闭 Cursor 进程
-Write-Host "$GREEN🔍 [检查]$NC 正在检查 Cursor 进程..."
+# 🔍 Check and stop Cursor processes
+Write-Host "$GREEN🔍 [Check]$NC Checking Cursor processes..."
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "$BLUE🔍 [调试]$NC 正在获取 $processName 进程详细信息："
+    Write-Host "$BLUE🔍 [Debug]$NC Retrieving detailed info for $processName process:"
     Get-WmiObject Win32_Process -Filter "name='$processName'" |
         Select-Object ProcessId, ExecutablePath, CommandLine |
         Format-List
 }
 
-# 定义最大重试次数和等待时间
+# Define max retries and wait time
 $MAX_RETRIES = 5
 $WAIT_TIME = 1
 
-# 🔄 处理进程关闭并保存进程信息
+# 🔄 Handle process termination and save process info
 function Close-CursorProcessAndSaveInfo {
     param($processName)
 
@@ -2140,13 +2122,13 @@ function Close-CursorProcessAndSaveInfo {
 
     $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
     if ($processes) {
-        Write-Host "$YELLOW⚠️  [警告]$NC 发现 $processName 正在运行"
+        Write-Host "$YELLOW⚠️  [Warning]$NC Found running process: $processName"
 
-        # 💾 保存进程信息用于后续重启 - 修复：确保获取单个进程路径
+        # Save process info for later restart
         $firstProcess = if ($processes -is [array]) { $processes[0] } else { $processes }
         $processPath = $firstProcess.Path
 
-        # 确保路径是字符串而不是数组
+        # Ensure path is a string, not an array
         if ($processPath -is [array]) {
             $processPath = $processPath[0]
         }
@@ -2156,11 +2138,11 @@ function Close-CursorProcessAndSaveInfo {
             Path = $processPath
             StartTime = $firstProcess.StartTime
         }
-        Write-Host "$GREEN💾 [保存]$NC 已保存进程信息: $($global:CursorProcessInfo.Path)"
+        Write-Host "$GREEN💾 [Save]$NC Saved process info: $($global:CursorProcessInfo.Path)"
 
         Get-ProcessDetails $processName
 
-        Write-Host "$YELLOW🔄 [操作]$NC 尝试关闭 $processName..."
+        Write-Host "$YELLOW🔄 [Action]$NC Attempting to stop $processName..."
         Stop-Process -Name $processName -Force
 
         $retryCount = 0
@@ -2170,19 +2152,19 @@ function Close-CursorProcessAndSaveInfo {
 
             $retryCount++
             if ($retryCount -ge $MAX_RETRIES) {
-                Write-Host "$RED❌ [错误]$NC 在 $MAX_RETRIES 次尝试后仍无法关闭 $processName"
+                Write-Host "$RED❌ [Error]$NC Unable to stop $processName after $MAX_RETRIES attempts"
                 Get-ProcessDetails $processName
-                Write-Host "$RED💥 [错误]$NC 请手动关闭进程后重试"
-                Read-Host "按回车键退出"
+                Write-Host "$RED💥 [Error]$NC Please close the process manually and retry"
+                Read-Host "Press Enter to exit"
                 exit 1
             }
-            Write-Host "$YELLOW⏳ [等待]$NC 等待进程关闭，尝试 $retryCount/$MAX_RETRIES..."
+            Write-Host "$YELLOW⏳ [Wait]$NC Waiting for process to exit, attempt $retryCount/$MAX_RETRIES..."
             Start-Sleep -Seconds $WAIT_TIME
         }
-        Write-Host "$GREEN✅ [成功]$NC $processName 已成功关闭"
+        Write-Host "$GREEN✅ [Success]$NC $processName stopped successfully"
     } else {
-        Write-Host "$BLUE💡 [提示]$NC 未发现 $processName 进程运行"
-        # 尝试找到Cursor的安装路径
+        Write-Host "$BLUE💡 [Tip]$NC No running $processName process found"
+        # Try to locate Cursor install path
         $installPath = Resolve-CursorInstallPath
         $candidatePath = if ($installPath) { Join-Path $installPath "Cursor.exe" } else { $null }
         if ($candidatePath -and (Test-Path $candidatePath)) {
@@ -2191,11 +2173,11 @@ function Close-CursorProcessAndSaveInfo {
                 Path = $candidatePath
                 StartTime = $null
             }
-            Write-Host "$GREEN💾 [发现]$NC 找到Cursor安装路径: $candidatePath"
+            Write-Host "$GREEN💾 [Found]$NC Found Cursor install path: $candidatePath"
         }
 
         if (-not $global:CursorProcessInfo) {
-            Write-Host "$YELLOW⚠️  [警告]$NC 未找到Cursor安装路径，将使用默认路径"
+            Write-Host "$YELLOW⚠️  [Warning]$NC Cursor install path not found, using default path"
             $defaultInstallPath = if ($global:CursorLocalAppDataRoot) { Join-Path $global:CursorLocalAppDataRoot "Programs\cursor\Cursor.exe" } else { "$env:LOCALAPPDATA\Programs\cursor\Cursor.exe" }
             $global:CursorProcessInfo = @{
                 ProcessName = "Cursor"
@@ -2206,298 +2188,287 @@ function Close-CursorProcessAndSaveInfo {
     }
 }
 
-# �️ 确保备份目录存在
+# Ensure backup directory exists
 if (-not $BACKUP_DIR) {
-    Write-Host "$YELLOW⚠️  [警告]$NC 无法解析备份目录路径，跳过创建"
+    Write-Host "$YELLOW⚠️  [Warning]$NC Cannot resolve backup directory path, skipping creation"
 } elseif (-not (Test-Path $BACKUP_DIR)) {
     try {
         New-Item -ItemType Directory -Path $BACKUP_DIR -Force | Out-Null
-        Write-Host "$GREEN✅ [备份目录]$NC 备份目录创建成功: $BACKUP_DIR"
+        Write-Host "$GREEN✅ [Backup Directory]$NC Backup directory created: $BACKUP_DIR"
     } catch {
-        Write-Host "$YELLOW⚠️  [警告]$NC 备份目录创建失败: $($_.Exception.Message)"
+        Write-Host "$YELLOW⚠️  [Warning]$NC Backup directory creation failed: $($_.Exception.Message)"
     }
 }
 
-# �🚀 根据用户选择执行相应功能
+# 🚀 Execute selected mode
 if ($executeMode -eq "MODIFY_ONLY") {
-    Write-Host "$GREEN🚀 [开始]$NC 开始执行仅修改机器码功能..."
+    Write-Host "$GREEN🚀 [Start]$NC Starting Modify Machine IDs Only execution..."
 
-    # 先进行环境检查
+    # Environment check first
     $envCheck = Test-CursorEnvironment -Mode "MODIFY_ONLY"
     if (-not $envCheck.Success) {
         Write-Host ""
-        Write-Host "$RED❌ [环境检查失败]$NC 无法继续执行，发现以下问题："
+        Write-Host "$RED❌ [Env Check Failed]$NC Cannot continue execution; the following issues were found:"
         foreach ($issue in $envCheck.Issues) {
             Write-Host "$RED  • ${issue}$NC"
         }
         Write-Host ""
-        Write-Host "$YELLOW💡 [建议]$NC 请选择以下操作："
-        Write-Host "$BLUE  1️⃣  选择'重置环境+修改机器码'选项（推荐）$NC"
-        Write-Host "$BLUE  2️⃣  手动启动Cursor一次，然后重新运行脚本$NC"
-        Write-Host "$BLUE  3️⃣  检查Cursor是否正确安装$NC"
+        Write-Host "$YELLOW💡 [Recommendations]$NC Please try one of the following:"
+        Write-Host "$BLUE  1️⃣  Select 'Reset Environment + Modify Machine IDs' (Recommended)$NC"
+        Write-Host "$BLUE  2️⃣  Launch Cursor manually once, then re-run this script$NC"
+        Write-Host "$BLUE  3️⃣  Verify that Cursor is properly installed$NC"
         Write-Host ""
-        Read-Host "按回车键退出"
+        Read-Host "Press Enter to exit"
         exit 1
     }
 
-    # 执行机器码修改
+    # Execute machine code modification
     $configSuccess = Modify-MachineCodeConfig -Mode "MODIFY_ONLY"
 
     if ($configSuccess) {
         Write-Host ""
-        Write-Host "$GREEN🎉 [配置文件]$NC 机器码配置文件修改完成！"
+        Write-Host "$GREEN🎉 [Config File]$NC Machine code configuration modified successfully!"
 
-        # 添加注册表修改
-        Write-Host "$BLUE🔧 [注册表]$NC 正在修改系统注册表..."
+        # Registry modification
+        Write-Host "$BLUE🔧 [Registry]$NC Modifying system registry..."
         $registrySuccess = Update-MachineGuid
 
-        # 🔧 新增：JavaScript注入功能（设备识别绕过增强）
+        # JavaScript injection (Enhanced device ID bypass)
         Write-Host ""
-        Write-Host "$BLUE🔧 [设备识别绕过]$NC 正在执行JavaScript注入功能..."
-        Write-Host "$BLUE💡 [说明]$NC 此功能将直接修改Cursor内核JS文件，实现更深层的设备识别绕过"
+        Write-Host "$BLUE🔧 [Device ID Bypass]$NC Executing JavaScript kernel injection..."
+        Write-Host "$BLUE💡 [Description]$NC Modifying Cursor core JS files for deep device identifier bypass"
         $jsSuccess = Modify-CursorJSFiles
 
         if ($registrySuccess) {
-            Write-Host "$GREEN✅ [注册表]$NC 系统注册表修改成功"
+            Write-Host "$GREEN✅ [Registry]$NC System registry modified successfully"
 
             if ($jsSuccess) {
-                Write-Host "$GREEN✅ [JavaScript注入]$NC JavaScript注入功能执行成功"
+                Write-Host "$GREEN✅ [JS Injection]$NC JavaScript injection executed successfully"
                 Write-Host ""
-                Write-Host "$GREEN🎉 [完成]$NC 所有机器码修改完成（增强版）！"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下修改："
-                Write-Host "$GREEN  ✓ Cursor 配置文件 (storage.json)$NC"
-                Write-Host "$GREEN  ✓ 系统注册表 (MachineGuid)$NC"
-                Write-Host "$GREEN  ✓ JavaScript内核注入（设备识别绕过）$NC"
+                Write-Host "$GREEN🎉 [Complete]$NC All machine code modifications completed (Enhanced)! "
+                Write-Host "$BLUE📋 [Details]$NC Completed modifications:"
+                Write-Host "$GREEN  ✓ Cursor configuration file (storage.json)$NC"
+                Write-Host "$GREEN  ✓ System registry (MachineGuid)$NC"
+                Write-Host "$GREEN  ✓ JavaScript kernel patch (Device ID Bypass)$NC"
             } else {
-                Write-Host "$YELLOW⚠️  [JavaScript注入]$NC JavaScript注入功能执行失败，但其他功能成功"
+                Write-Host "$YELLOW⚠️  [JS Injection]$NC JavaScript injection failed, but other modifications succeeded"
                 Write-Host ""
-                Write-Host "$GREEN🎉 [完成]$NC 所有机器码修改完成！"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下修改："
-                Write-Host "$GREEN  ✓ Cursor 配置文件 (storage.json)$NC"
-                Write-Host "$GREEN  ✓ 系统注册表 (MachineGuid)$NC"
-                Write-Host "$YELLOW  ⚠ JavaScript内核注入（部分失败）$NC"
+                Write-Host "$GREEN🎉 [Complete]$NC Machine code modifications completed!"
+                Write-Host "$BLUE📋 [Details]$NC Completed modifications:"
+                Write-Host "$GREEN  ✓ Cursor configuration file (storage.json)$NC"
+                Write-Host "$GREEN  ✓ System registry (MachineGuid)$NC"
+                Write-Host "$YELLOW  ⚠ JavaScript kernel patch (Partial failure)$NC"
             }
 
-            # 🔒 添加配置文件保护机制
-            Write-Host "$BLUE🔒 [保护]$NC 正在设置配置文件保护..."
+            # Add configuration file protection
+            Write-Host "$BLUE🔒 [Protection]$NC Setting configuration file protection..."
             try {
                 $configPath = $STORAGE_FILE
                 if (-not $configPath) {
-                    throw "无法解析配置文件路径"
+                    throw "Cannot resolve configuration file path"
                 }
                 $configFile = Get-Item $configPath
                 $configFile.IsReadOnly = $true
-                Write-Host "$GREEN✅ [保护]$NC 配置文件已设置为只读，防止Cursor覆盖修改"
-                Write-Host "$BLUE💡 [提示]$NC 文件路径: $configPath"
+                Write-Host "$GREEN✅ [Protection]$NC Configuration file set to read-only to prevent Cursor overwrite"
+                Write-Host "$BLUE💡 [Tip]$NC File path: $configPath"
             } catch {
-                Write-Host "$YELLOW⚠️  [保护]$NC 设置只读属性失败: $($_.Exception.Message)"
-                Write-Host "$BLUE💡 [建议]$NC 可手动右键文件 → 属性 → 勾选'只读'"
+                Write-Host "$YELLOW⚠️  [Protection]$NC Failed to set read-only attribute: $($_.Exception.Message)"
+                Write-Host "$BLUE💡 [Tip]$NC You can manually right-click file -> Properties -> check 'Read-only'"
             }
         } else {
-            Write-Host "$YELLOW⚠️  [注册表]$NC 注册表修改失败，但配置文件修改成功"
+            Write-Host "$YELLOW⚠️  [Registry]$NC Registry modification failed, but configuration file update succeeded"
 
             if ($jsSuccess) {
-                Write-Host "$GREEN✅ [JavaScript注入]$NC JavaScript注入功能执行成功"
+                Write-Host "$GREEN✅ [JS Injection]$NC JavaScript injection executed successfully"
                 Write-Host ""
-                Write-Host "$YELLOW🎉 [部分完成]$NC 配置文件和JavaScript注入完成，注册表修改失败"
-                Write-Host "$BLUE💡 [建议]$NC 可能需要管理员权限来修改注册表"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下修改："
-                Write-Host "$GREEN  ✓ Cursor 配置文件 (storage.json)$NC"
-                Write-Host "$YELLOW  ⚠ 系统注册表 (MachineGuid) - 失败$NC"
-                Write-Host "$GREEN  ✓ JavaScript内核注入（设备识别绕过）$NC"
+                Write-Host "$YELLOW🎉 [Partially Complete]$NC Config file and JS injection succeeded; registry modification failed"
+                Write-Host "$BLUE💡 [Tip]$NC Administrator privileges may be required to modify the registry"
+                Write-Host "$BLUE📋 [Details]$NC Completed modifications:"
+                Write-Host "$GREEN  ✓ Cursor configuration file (storage.json)$NC"
+                Write-Host "$YELLOW  ⚠ System registry (MachineGuid) - Failed$NC"
+                Write-Host "$GREEN  ✓ JavaScript kernel patch (Device ID Bypass)$NC"
             } else {
-                Write-Host "$YELLOW⚠️  [JavaScript注入]$NC JavaScript注入功能执行失败"
+                Write-Host "$YELLOW⚠️  [JS Injection]$NC JavaScript injection failed"
                 Write-Host ""
-                Write-Host "$YELLOW🎉 [部分完成]$NC 配置文件修改完成，注册表和JavaScript注入失败"
-                Write-Host "$BLUE💡 [建议]$NC 可能需要管理员权限来修改注册表"
+                Write-Host "$YELLOW🎉 [Partially Complete]$NC Config file update succeeded; registry and JS injection failed"
+                Write-Host "$BLUE💡 [Tip]$NC Administrator privileges may be required to modify the registry"
             }
 
-            # 🔒 即使注册表修改失败，也要保护配置文件
-            Write-Host "$BLUE🔒 [保护]$NC 正在设置配置文件保护..."
+            # Protect configuration file even if registry fails
+            Write-Host "$BLUE🔒 [Protection]$NC Setting configuration file protection..."
             try {
                 $configPath = $STORAGE_FILE
                 if (-not $configPath) {
-                    throw "无法解析配置文件路径"
+                    throw "Cannot resolve configuration file path"
                 }
                 $configFile = Get-Item $configPath
                 $configFile.IsReadOnly = $true
-                Write-Host "$GREEN✅ [保护]$NC 配置文件已设置为只读，防止Cursor覆盖修改"
-                Write-Host "$BLUE💡 [提示]$NC 文件路径: $configPath"
+                Write-Host "$GREEN✅ [Protection]$NC Configuration file set to read-only to prevent Cursor overwrite"
+                Write-Host "$BLUE💡 [Tip]$NC File path: $configPath"
             } catch {
-                Write-Host "$YELLOW⚠️  [保护]$NC 设置只读属性失败: $($_.Exception.Message)"
-                Write-Host "$BLUE💡 [建议]$NC 可手动右键文件 → 属性 → 勾选'只读'"
+                Write-Host "$YELLOW⚠️  [Protection]$NC Failed to set read-only attribute: $($_.Exception.Message)"
+                Write-Host "$BLUE💡 [Tip]$NC You can manually right-click file -> Properties -> check 'Read-only'"
             }
         }
 
         Write-Host ""
-        Write-Host "$BLUE🚫 [禁用更新]$NC 正在禁用 Cursor 自动更新..."
+        Write-Host "$BLUE🚫 [Disable Updates]$NC Disabling Cursor automatic updates..."
         if (Disable-CursorAutoUpdate) {
-            Write-Host "$GREEN✅ [禁用更新]$NC 自动更新已处理"
+            Write-Host "$GREEN✅ [Disable Updates]$NC Automatic updates processed"
         } else {
-            Write-Host "$YELLOW⚠️  [禁用更新]$NC 未能确认禁用更新，可能需要手动处理"
+            Write-Host "$YELLOW⚠️  [Disable Updates]$NC Could not confirm update disablement; manual review may be required"
         }
 
-        Write-Host "$BLUE💡 [提示]$NC 现在可以启动Cursor使用新的机器码配置"
+        Write-Host "$BLUE💡 [Tip]$NC You may now start Cursor with the new machine identifiers"
     } else {
         Write-Host ""
-        Write-Host "$RED❌ [失败]$NC 机器码修改失败！"
-        Write-Host "$YELLOW💡 [建议]$NC 请尝试'重置环境+修改机器码'选项"
+        Write-Host "$RED❌ [Failed]$NC Machine code configuration modification failed!"
+        Write-Host "$YELLOW💡 [Tip]$NC Please try the 'Reset Environment + Modify Machine IDs' option"
     }
 } else {
-    # 完整的重置环境+修改机器码流程
-    Write-Host "$GREEN🚀 [开始]$NC 开始执行重置环境+修改机器码功能..."
+    # Full Reset Environment + Modify Machine IDs workflow
+    Write-Host "$GREEN🚀 [Start]$NC Starting Reset Environment + Modify Machine IDs execution..."
 
-    # 🚀 关闭所有 Cursor 进程并保存信息
+    # Close all Cursor processes and save info
     Close-CursorProcessAndSaveInfo "Cursor"
     if (-not $global:CursorProcessInfo) {
         Close-CursorProcessAndSaveInfo "cursor"
     }
 
-    # 🚨 重要警告提示
+    # Important warning notice
     Write-Host ""
-    Write-Host "$RED🚨 [重要警告]$NC ============================================"
-    Write-Host "$YELLOW⚠️  [风控提醒]$NC Cursor 风控机制非常严格！"
-    Write-Host "$YELLOW⚠️  [必须删除]$NC 必须完全删除指定文件夹，不能有任何残留设置"
-    Write-Host "$YELLOW⚠️  [防掉试用]$NC 只有彻底清理才能有效防止掉试用Pro状态"
-    Write-Host "$RED🚨 [重要警告]$NC ============================================"
+    Write-Host "$RED🚨 [Important Warning]$NC ============================================"
+    Write-Host "$YELLOW⚠️  [Risk Notice]$NC Cursor security verification is strict."
+    Write-Host "$YELLOW⚠️  [Required Deletion]$NC Target trial directories must be fully cleared to avoid residual telemetry."
+    Write-Host "$YELLOW⚠️  [Trial Protection]$NC Thorough cleanup ensures fresh trial environment initialization."
+    Write-Host "$RED🚨 [Important Warning]$NC ============================================"
     Write-Host ""
 
-    # 🎯 执行 Cursor 防掉试用Pro删除文件夹功能
-    Write-Host "$GREEN🚀 [开始]$NC 开始执行核心功能..."
+    # Execute trial folder cleanup
+    Write-Host "$GREEN🚀 [Start]$NC Executing core folder cleanup..."
     Remove-CursorTrialFolders
 
-
-
-    # 🔄 重启Cursor让其重新生成配置文件
+    # Restart Cursor to regenerate fresh configuration files
     Restart-CursorAndWait
 
-    # 🛠️ 修改机器码配置
+    # Modify machine code configuration
     $configSuccess = Modify-MachineCodeConfig
     
-    # 🧹 执行 Cursor 初始化清理
+    # Execute Cursor initialization cleanup
     Invoke-CursorInitialization
 
     if ($configSuccess) {
         Write-Host ""
-        Write-Host "$GREEN🎉 [配置文件]$NC 机器码配置文件修改完成！"
+        Write-Host "$GREEN🎉 [Config File]$NC Machine code configuration modified successfully!"
 
-        # 添加注册表修改
-        Write-Host "$BLUE🔧 [注册表]$NC 正在修改系统注册表..."
+        # Registry modification
+        Write-Host "$BLUE🔧 [Registry]$NC Modifying system registry..."
         $registrySuccess = Update-MachineGuid
 
-        # 🔧 新增：JavaScript注入功能（设备识别绕过增强）
+        # JavaScript injection (Enhanced device ID bypass)
         Write-Host ""
-        Write-Host "$BLUE🔧 [设备识别绕过]$NC 正在执行JavaScript注入功能..."
-        Write-Host "$BLUE💡 [说明]$NC 此功能将直接修改Cursor内核JS文件，实现更深层的设备识别绕过"
+        Write-Host "$BLUE🔧 [Device ID Bypass]$NC Executing JavaScript kernel injection..."
+        Write-Host "$BLUE💡 [Description]$NC Modifying Cursor core JS files for deep device identifier bypass"
         $jsSuccess = Modify-CursorJSFiles
 
         if ($registrySuccess) {
-            Write-Host "$GREEN✅ [注册表]$NC 系统注册表修改成功"
+            Write-Host "$GREEN✅ [Registry]$NC System registry modified successfully"
 
             if ($jsSuccess) {
-                Write-Host "$GREEN✅ [JavaScript注入]$NC JavaScript注入功能执行成功"
+                Write-Host "$GREEN✅ [JS Injection]$NC JavaScript injection executed successfully"
                 Write-Host ""
-                Write-Host "$GREEN🎉 [完成]$NC 所有操作完成（增强版）！"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下操作："
-                Write-Host "$GREEN  ✓ 删除 Cursor 试用相关文件夹$NC"
-                Write-Host "$GREEN  ✓ Cursor 初始化清理$NC"
-                Write-Host "$GREEN  ✓ 重新生成配置文件$NC"
-                Write-Host "$GREEN  ✓ 修改机器码配置$NC"
-                Write-Host "$GREEN  ✓ 修改系统注册表$NC"
-                Write-Host "$GREEN  ✓ JavaScript内核注入（设备识别绕过）$NC"
+                Write-Host "$GREEN🎉 [Complete]$NC All operations completed successfully (Enhanced)!"
+                Write-Host "$BLUE📋 [Details]$NC Completed operations:"
+                Write-Host "$GREEN  ✓ Removed Cursor trial directories$NC"
+                Write-Host "$GREEN  ✓ Cursor initialization cleanup$NC"
+                Write-Host "$GREEN  ✓ Regenerated configuration files$NC"
+                Write-Host "$GREEN  ✓ Modified machine code configuration$NC"
+                Write-Host "$GREEN  ✓ Updated system registry$NC"
+                Write-Host "$GREEN  ✓ JavaScript kernel patch (Device ID Bypass)$NC"
             } else {
-                Write-Host "$YELLOW⚠️  [JavaScript注入]$NC JavaScript注入功能执行失败，但其他功能成功"
+                Write-Host "$YELLOW⚠️  [JS Injection]$NC JavaScript injection failed, but other operations succeeded"
                 Write-Host ""
-                Write-Host "$GREEN🎉 [完成]$NC 所有操作完成！"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下操作："
-                Write-Host "$GREEN  ✓ 删除 Cursor 试用相关文件夹$NC"
-                Write-Host "$GREEN  ✓ Cursor 初始化清理$NC"
-                Write-Host "$GREEN  ✓ 重新生成配置文件$NC"
-                Write-Host "$GREEN  ✓ 修改机器码配置$NC"
-                Write-Host "$GREEN  ✓ 修改系统注册表$NC"
-                Write-Host "$YELLOW  ⚠ JavaScript内核注入（部分失败）$NC"
+                Write-Host "$GREEN🎉 [Complete]$NC All operations completed!"
+                Write-Host "$BLUE📋 [Details]$NC Completed operations:"
+                Write-Host "$GREEN  ✓ Removed Cursor trial directories$NC"
+                Write-Host "$GREEN  ✓ Cursor initialization cleanup$NC"
+                Write-Host "$GREEN  ✓ Regenerated configuration files$NC"
+                Write-Host "$GREEN  ✓ Modified machine code configuration$NC"
+                Write-Host "$GREEN  ✓ Updated system registry$NC"
+                Write-Host "$YELLOW  ⚠ JavaScript kernel patch (Partial failure)$NC"
             }
 
-            # 🔒 添加配置文件保护机制
-            Write-Host "$BLUE🔒 [保护]$NC 正在设置配置文件保护..."
+            # Add configuration file protection
+            Write-Host "$BLUE🔒 [Protection]$NC Setting configuration file protection..."
             try {
                 $configPath = $STORAGE_FILE
                 if (-not $configPath) {
-                    throw "无法解析配置文件路径"
+                    throw "Cannot resolve configuration file path"
                 }
                 $configFile = Get-Item $configPath
                 $configFile.IsReadOnly = $true
-                Write-Host "$GREEN✅ [保护]$NC 配置文件已设置为只读，防止Cursor覆盖修改"
-                Write-Host "$BLUE💡 [提示]$NC 文件路径: $configPath"
+                Write-Host "$GREEN✅ [Protection]$NC Configuration file set to read-only to prevent Cursor overwrite"
+                Write-Host "$BLUE💡 [Tip]$NC File path: $configPath"
             } catch {
-                Write-Host "$YELLOW⚠️  [保护]$NC 设置只读属性失败: $($_.Exception.Message)"
-                Write-Host "$BLUE💡 [建议]$NC 可手动右键文件 → 属性 → 勾选'只读'"
+                Write-Host "$YELLOW⚠️  [Protection]$NC Failed to set read-only attribute: $($_.Exception.Message)"
+                Write-Host "$BLUE💡 [Tip]$NC You can manually right-click file -> Properties -> check 'Read-only'"
             }
         } else {
-            Write-Host "$YELLOW⚠️  [注册表]$NC 注册表修改失败，但其他操作成功"
+            Write-Host "$YELLOW⚠️  [Registry]$NC Registry modification failed, but other operations succeeded"
 
             if ($jsSuccess) {
-                Write-Host "$GREEN✅ [JavaScript注入]$NC JavaScript注入功能执行成功"
+                Write-Host "$GREEN✅ [JS Injection]$NC JavaScript injection executed successfully"
                 Write-Host ""
-                Write-Host "$YELLOW🎉 [部分完成]$NC 大部分操作完成，注册表修改失败"
-                Write-Host "$BLUE💡 [建议]$NC 可能需要管理员权限来修改注册表"
-                Write-Host "$BLUE📋 [详情]$NC 已完成以下操作："
-                Write-Host "$GREEN  ✓ 删除 Cursor 试用相关文件夹$NC"
-                Write-Host "$GREEN  ✓ Cursor 初始化清理$NC"
-                Write-Host "$GREEN  ✓ 重新生成配置文件$NC"
-                Write-Host "$GREEN  ✓ 修改机器码配置$NC"
-                Write-Host "$YELLOW  ⚠ 修改系统注册表 - 失败$NC"
-                Write-Host "$GREEN  ✓ JavaScript内核注入（设备识别绕过）$NC"
+                Write-Host "$YELLOW🎉 [Partially Complete]$NC Most operations completed; registry modification failed"
+                Write-Host "$BLUE💡 [Tip]$NC Administrator privileges may be required to modify the registry"
+                Write-Host "$BLUE📋 [Details]$NC Completed operations:"
+                Write-Host "$GREEN  ✓ Removed Cursor trial directories$NC"
+                Write-Host "$GREEN  ✓ Cursor initialization cleanup$NC"
+                Write-Host "$GREEN  ✓ Regenerated configuration files$NC"
+                Write-Host "$GREEN  ✓ Modified machine code configuration$NC"
+                Write-Host "$YELLOW  ⚠ System registry update - Failed$NC"
+                Write-Host "$GREEN  ✓ JavaScript kernel patch (Device ID Bypass)$NC"
             } else {
-                Write-Host "$YELLOW⚠️  [JavaScript注入]$NC JavaScript注入功能执行失败"
+                Write-Host "$YELLOW⚠️  [JS Injection]$NC JavaScript injection failed"
                 Write-Host ""
-                Write-Host "$YELLOW🎉 [部分完成]$NC 大部分操作完成，注册表和JavaScript注入失败"
-                Write-Host "$BLUE💡 [建议]$NC 可能需要管理员权限来修改注册表"
+                Write-Host "$YELLOW🎉 [Partially Complete]$NC Most operations completed; registry and JS injection failed"
+                Write-Host "$BLUE💡 [Tip]$NC Administrator privileges may be required to modify the registry"
             }
 
-            # 🔒 即使注册表修改失败，也要保护配置文件
-            Write-Host "$BLUE🔒 [保护]$NC 正在设置配置文件保护..."
+            # Protect configuration file even if registry fails
+            Write-Host "$BLUE🔒 [Protection]$NC Setting configuration file protection..."
             try {
                 $configPath = $STORAGE_FILE
                 if (-not $configPath) {
-                    throw "无法解析配置文件路径"
+                    throw "Cannot resolve configuration file path"
                 }
                 $configFile = Get-Item $configPath
                 $configFile.IsReadOnly = $true
-                Write-Host "$GREEN✅ [保护]$NC 配置文件已设置为只读，防止Cursor覆盖修改"
-                Write-Host "$BLUE💡 [提示]$NC 文件路径: $configPath"
+                Write-Host "$GREEN✅ [Protection]$NC Configuration file set to read-only to prevent Cursor overwrite"
+                Write-Host "$BLUE💡 [Tip]$NC File path: $configPath"
             } catch {
-                Write-Host "$YELLOW⚠️  [保护]$NC 设置只读属性失败: $($_.Exception.Message)"
-                Write-Host "$BLUE💡 [建议]$NC 可手动右键文件 → 属性 → 勾选'只读'"
+                Write-Host "$YELLOW⚠️  [Protection]$NC Failed to set read-only attribute: $($_.Exception.Message)"
+                Write-Host "$BLUE💡 [Tip]$NC You can manually right-click file -> Properties -> check 'Read-only'"
             }
         }
 
         Write-Host ""
-        Write-Host "$BLUE🚫 [禁用更新]$NC 正在禁用 Cursor 自动更新..."
+        Write-Host "$BLUE🚫 [Disable Updates]$NC Disabling Cursor automatic updates..."
         if (Disable-CursorAutoUpdate) {
-            Write-Host "$GREEN✅ [禁用更新]$NC 自动更新已处理"
+            Write-Host "$GREEN✅ [Disable Updates]$NC Automatic updates processed"
         } else {
-            Write-Host "$YELLOW⚠️  [禁用更新]$NC 未能确认禁用更新，可能需要手动处理"
+            Write-Host "$YELLOW⚠️  [Disable Updates]$NC Could not confirm update disablement; manual review may be required"
         }
     } else {
         Write-Host ""
-        Write-Host "$RED❌ [失败]$NC 机器码配置修改失败！"
-        Write-Host "$YELLOW💡 [建议]$NC 请检查错误信息并重试"
+        Write-Host "$RED❌ [Failed]$NC Machine code configuration update failed!"
+        Write-Host "$YELLOW💡 [Tip]$NC Please check error messages and retry"
     }
 }
 
-
-# 📱 显示公众号信息
+# 🎉 Script Execution Completed
 Write-Host ""
-Write-Host "$GREEN================================$NC"
-Write-Host "$YELLOW📱  关注公众号【煎饼果子卷AI】一起交流更多Cursor技巧和AI知识(脚本免费、关注公众号加群有更多技巧和大佬)  $NC"
-Write-Host "$YELLOW⚡   [小小广告] Cursor官网正规成品号：Unlimited ♾️ ¥1050 | 7天周卡 $100 ¥210 | 7天周卡 $500 ¥1050 | 7天周卡 $1000 ¥2450 | 全部7天质保 | ，WeChat：JavaRookie666  $NC"
-Write-Host "$GREEN================================$NC"
+Write-Host "$GREEN🎉 [Complete]$NC Cursor Machine ID Modifier execution finished!"
+Write-Host "$BLUE💡 [Tip]$NC If you encounter any issues, please re-run the script as Administrator"
 Write-Host ""
-
-# 🎉 脚本执行完成
-Write-Host "$GREEN🎉 [脚本完成]$NC 感谢使用 Cursor 机器码修改工具！"
-Write-Host "$BLUE💡 [提示]$NC 如有问题请参考公众号或重新运行脚本"
-Write-Host ""
-Read-Host "按回车键退出"
-
+Read-Host "Press Enter to exit"

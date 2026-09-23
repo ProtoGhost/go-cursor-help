@@ -1,34 +1,34 @@
 # ========================================
-# Cursor Hook 注入脚本 (Windows)
+# Cursor Hook Injection Script (Windows)
 # ========================================
 #
-# 🎯 功能：将 cursor_hook.js 注入到 Cursor 的 main.js 文件顶部
+# 🎯 Feature: Injects cursor_hook.js into the top of Cursor's main.js file
 # 
-# 📦 使用方式：
-# 1. 以管理员权限运行 PowerShell
-# 2. 执行: .\inject_hook_win.ps1
+# 📦 Usage:
+# 1. Open PowerShell as Administrator
+# 2. Run: .\inject_hook_win.ps1
 #
-# ⚠️ 注意事项：
-# - 会自动备份原始 main.js 文件
-# - 支持回滚到原始版本
-# - Cursor 更新后需要重新注入
+# ⚠️ Notes:
+# - Automatically creates a backup of the original main.js file
+# - Supports rollback to the original version
+# - Re-injection is required after Cursor updates
 #
 # ========================================
 
 param(
-    [switch]$Rollback,  # 回滚到原始版本
-    [switch]$Force,     # 强制重新注入
-    [switch]$Debug      # 启用调试模式
+    [switch]$Rollback,  # Rollback to original version
+    [switch]$Force,     # Force re-injection
+    [switch]$Debug      # Enable debug mode
 )
 
-# 颜色定义
+# Color definitions
 $RED = "`e[31m"
 $GREEN = "`e[32m"
 $YELLOW = "`e[33m"
 $BLUE = "`e[34m"
 $NC = "`e[0m"
 
-# 日志函数
+# Logging function
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -40,7 +40,7 @@ function Write-Log {
     }
 }
 
-# 获取 Cursor 安装路径
+# Get Cursor installation path
 function Get-CursorPath {
     $possiblePaths = @(
         "$env:LOCALAPPDATA\Programs\cursor\resources\app\out\main.js",
@@ -58,7 +58,7 @@ function Get-CursorPath {
     return $null
 }
 
-# 获取 Hook 脚本路径
+# Get Hook script path
 function Get-HookScriptPath {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $hookPath = Join-Path $scriptDir "cursor_hook.js"
@@ -67,7 +67,7 @@ function Get-HookScriptPath {
         return $hookPath
     }
     
-    # 尝试从当前目录查找
+    # Try locating from current directory
     $currentDir = Get-Location
     $hookPath = Join-Path $currentDir "cursor_hook.js"
     
@@ -78,7 +78,7 @@ function Get-HookScriptPath {
     return $null
 }
 
-# 检查是否已注入
+# Check if already injected
 function Test-AlreadyInjected {
     param([string]$MainJsPath)
     
@@ -86,7 +86,7 @@ function Test-AlreadyInjected {
     return $content -match "__cursor_patched__"
 }
 
-# 备份原始文件
+# Backup original file
 function Backup-MainJs {
     param([string]$MainJsPath)
     
@@ -98,20 +98,20 @@ function Backup-MainJs {
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $backupPath = Join-Path $backupDir "main.js.backup_$timestamp"
     
-    # 检查是否有原始备份
+    # Check if original backup exists
     $originalBackup = Join-Path $backupDir "main.js.original"
     if (-not (Test-Path $originalBackup)) {
         Copy-Item $MainJsPath $originalBackup -Force
-        Write-Log "已创建原始备份: $originalBackup"
+        Write-Log "Created original backup: $originalBackup"
     }
     
     Copy-Item $MainJsPath $backupPath -Force
-    Write-Log "已创建时间戳备份: $backupPath"
+    Write-Log "Created timestamped backup: $backupPath"
     
     return $originalBackup
 }
 
-# 回滚到原始版本
+# Rollback to original version
 function Restore-MainJs {
     param([string]$MainJsPath)
     
@@ -120,147 +120,146 @@ function Restore-MainJs {
     
     if (Test-Path $originalBackup) {
         Copy-Item $originalBackup $MainJsPath -Force
-        Write-Log "已回滚到原始版本" "INFO"
+        Write-Log "Rolled back to original version successfully" "INFO"
         return $true
     } else {
-        Write-Log "未找到原始备份文件" "ERROR"
+        Write-Log "Original backup file not found" "ERROR"
         return $false
     }
 }
 
-# 注入 Hook 代码
+# Inject Hook code
 function Inject-Hook {
     param(
         [string]$MainJsPath,
         [string]$HookScriptPath
     )
     
-    # 读取 Hook 脚本内容
+    # Read Hook script content
     $hookContent = Get-Content $HookScriptPath -Raw -Encoding UTF8
     
-    # 读取 main.js 内容
+    # Read main.js content
     $mainContent = Get-Content $MainJsPath -Raw -Encoding UTF8
     
-    # 查找注入点：在 Sentry 初始化代码之后
-    # Sentry 初始化代码特征: _sentryDebugIds
+    # Find injection point: after Sentry initialization code
+    # Sentry initialization signature: _sentryDebugIds
     $sentryPattern = '(?<=\}\(\);)\s*(?=var\s+\w+\s*=\s*function)'
     
     if ($mainContent -match $sentryPattern) {
-        # 在 Sentry 初始化之后注入
+        # Inject after Sentry initialization
         $injectionPoint = $mainContent.IndexOf('}();') + 4
-        $newContent = $mainContent.Substring(0, $injectionPoint) + "`n`n// ========== Cursor Hook 注入开始 ==========`n" + $hookContent + "`n// ========== Cursor Hook 注入结束 ==========`n`n" + $mainContent.Substring($injectionPoint)
+        $newContent = $mainContent.Substring(0, $injectionPoint) + "`n`n// ========== Cursor Hook Injection Start ==========`n" + $hookContent + "`n// ========== Cursor Hook Injection End ==========`n`n" + $mainContent.Substring($injectionPoint)
     } else {
-        # 如果找不到 Sentry，直接在文件开头注入（在版权声明之后）
+        # Fallback: Inject at the beginning of the file (after copyright header)
         $copyrightEnd = $mainContent.IndexOf('*/') + 2
         if ($copyrightEnd -gt 2) {
-            $newContent = $mainContent.Substring(0, $copyrightEnd) + "`n`n// ========== Cursor Hook 注入开始 ==========`n" + $hookContent + "`n// ========== Cursor Hook 注入结束 ==========`n`n" + $mainContent.Substring($copyrightEnd)
+            $newContent = $mainContent.Substring(0, $copyrightEnd) + "`n`n// ========== Cursor Hook Injection Start ==========`n" + $hookContent + "`n// ========== Cursor Hook Injection End ==========`n`n" + $mainContent.Substring($copyrightEnd)
         } else {
-            $newContent = "// ========== Cursor Hook 注入开始 ==========`n" + $hookContent + "`n// ========== Cursor Hook 注入结束 ==========`n`n" + $mainContent
+            $newContent = "// ========== Cursor Hook Injection Start ==========`n" + $hookContent + "`n// ========== Cursor Hook Injection End ==========`n`n" + $mainContent
         }
     }
     
-    # 写入修改后的内容
+    # Write modified content
     Set-Content -Path $MainJsPath -Value $newContent -Encoding UTF8 -NoNewline
 
     return $true
 }
 
-# 关闭 Cursor 进程
+# Stop Cursor processes
 function Stop-CursorProcess {
     $cursorProcesses = Get-Process -Name "Cursor*" -ErrorAction SilentlyContinue
 
     if ($cursorProcesses) {
-        Write-Log "发现 Cursor 进程正在运行，正在关闭..."
+        Write-Log "Cursor processes found running, terminating..."
         $cursorProcesses | Stop-Process -Force
         Start-Sleep -Seconds 2
-        Write-Log "Cursor 进程已关闭"
+        Write-Log "Cursor processes stopped"
     }
 }
 
-# 主函数
+# Main function
 function Main {
     Write-Host ""
     Write-Host "$BLUE========================================$NC"
-    Write-Host "$BLUE   Cursor Hook 注入工具 (Windows)      $NC"
+    Write-Host "$BLUE   Cursor Hook Injection Tool (Windows) $NC"
     Write-Host "$BLUE========================================$NC"
     Write-Host ""
 
-    # 获取 Cursor main.js 路径
+    # Locate Cursor main.js path
     $mainJsPath = Get-CursorPath
     if (-not $mainJsPath) {
-        Write-Log "未找到 Cursor 安装路径" "ERROR"
-        Write-Log "请确保 Cursor 已正确安装" "ERROR"
+        Write-Log "Cursor installation path not found" "ERROR"
+        Write-Log "Please ensure Cursor is properly installed" "ERROR"
         exit 1
     }
-    Write-Log "找到 Cursor main.js: $mainJsPath"
+    Write-Log "Found Cursor main.js: $mainJsPath"
 
-    # 回滚模式
+    # Rollback mode
     if ($Rollback) {
-        Write-Log "执行回滚操作..."
+        Write-Log "Executing rollback operation..."
         Stop-CursorProcess
         if (Restore-MainJs -MainJsPath $mainJsPath) {
-            Write-Log "回滚成功！" "INFO"
+            Write-Log "Rollback completed successfully!" "INFO"
         } else {
-            Write-Log "回滚失败！" "ERROR"
+            Write-Log "Rollback failed!" "ERROR"
             exit 1
         }
         exit 0
     }
 
-    # 检查是否已注入
+    # Check if already injected
     if ((Test-AlreadyInjected -MainJsPath $mainJsPath) -and -not $Force) {
-        Write-Log "Hook 已经注入，无需重复操作" "WARN"
-        Write-Log "如需强制重新注入，请使用 -Force 参数" "INFO"
+        Write-Log "Hook is already injected; no action needed" "WARN"
+        Write-Log "To force re-injection, use the -Force parameter" "INFO"
         exit 0
     }
 
-    # 获取 Hook 脚本路径
+    # Get Hook script path
     $hookScriptPath = Get-HookScriptPath
     if (-not $hookScriptPath) {
-        Write-Log "未找到 cursor_hook.js 文件" "ERROR"
-        Write-Log "请确保 cursor_hook.js 与此脚本在同一目录" "ERROR"
+        Write-Log "cursor_hook.js file not found" "ERROR"
+        Write-Log "Please ensure cursor_hook.js is in the same directory as this script" "ERROR"
         exit 1
     }
-    Write-Log "找到 Hook 脚本: $hookScriptPath"
+    Write-Log "Found Hook script: $hookScriptPath"
 
-    # 关闭 Cursor 进程
+    # Terminate Cursor processes
     Stop-CursorProcess
 
-    # 备份原始文件
-    Write-Log "正在备份原始文件..."
+    # Backup original file
+    Write-Log "Backing up original file..."
     $backupPath = Backup-MainJs -MainJsPath $mainJsPath
 
-    # 注入 Hook 代码
-    Write-Log "正在注入 Hook 代码..."
+    # Inject Hook code
+    Write-Log "Injecting Hook code..."
     try {
         if (Inject-Hook -MainJsPath $mainJsPath -HookScriptPath $hookScriptPath) {
-            Write-Log "Hook 注入成功！" "INFO"
+            Write-Log "Hook injected successfully!" "INFO"
         } else {
-            Write-Log "Hook 注入失败！" "ERROR"
+            Write-Log "Hook injection failed!" "ERROR"
             exit 1
         }
     } catch {
-        Write-Log "注入过程中发生错误: $_" "ERROR"
-        Write-Log "正在回滚..." "WARN"
+        Write-Log "Error occurred during injection: $_" "ERROR"
+        Write-Log "Rolling back..." "WARN"
         Restore-MainJs -MainJsPath $mainJsPath
         exit 1
     }
 
     Write-Host ""
     Write-Host "$GREEN========================================$NC"
-    Write-Host "$GREEN   ✅ Hook 注入完成！                   $NC"
+    Write-Host "$GREEN   ✅ Hook Injection Complete!          $NC"
     Write-Host "$GREEN========================================$NC"
     Write-Host ""
-    Write-Log "现在可以启动 Cursor 了"
-    Write-Log "ID 配置文件位置: $env:USERPROFILE\.cursor_ids.json"
+    Write-Log "You can now launch Cursor"
+    Write-Log "ID configuration file location: $env:USERPROFILE\.cursor_ids.json"
     Write-Host ""
-    Write-Host "$YELLOW提示:$NC"
-    Write-Host "  - 如需回滚，请运行: .\inject_hook_win.ps1 -Rollback"
-    Write-Host "  - 如需强制重新注入，请运行: .\inject_hook_win.ps1 -Force"
-    Write-Host "  - 如需启用调试日志，请运行: .\inject_hook_win.ps1 -Debug"
+    Write-Host "${YELLOW}Notes:$NC"
+    Write-Host "  - To rollback: .\inject_hook_win.ps1 -Rollback"
+    Write-Host "  - To force re-inject: .\inject_hook_win.ps1 -Force"
+    Write-Host "  - To enable debug logging: .\inject_hook_win.ps1 -Debug"
     Write-Host ""
 }
 
-# 执行主函数
+# Execute main function
 Main
-

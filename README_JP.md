@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Release](https://img.shields.io/github/v/release/yuaotian/go-cursor-help?style=flat-square&logo=github&color=blue)](https://github.com/yuaotian/go-cursor-help/releases/latest)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&logo=bookstack)](https://github.com/yuaotian/go-cursor-help/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/yuaotian/go-cursor-help?style=flat-square&logo=github)](https://github.com/yuaotian/go-cursor-help/stargazers)
+[![Release](https://img.shields.io/github/v/release/ProtoGhost/go-cursor-help?style=flat-square&logo=github&color=blue)](https://github.com/ProtoGhost/go-cursor-help/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&logo=bookstack)](https://github.com/ProtoGhost/go-cursor-help/blob/master/LICENSE)
+[![Stars](https://img.shields.io/github/stars/ProtoGhost/go-cursor-help?style=flat-square&logo=github)](https://github.com/ProtoGhost/go-cursor-help/stargazers)
 
 [🌟 English](README.md) | [🌏 中文](README_CN.md) | [🌏 日本語](README_JP.md)
 
@@ -283,38 +283,38 @@ Claude 3.7 Sonnetの"High Load"メッセージが表示された場合、これ�
 
 ```bash
 # 方法2
-curl -fsSL https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
+curl -fsSL https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
 ```
 
 **Linux**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash 
+curl -fsSL https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash 
 ```
 
 **Windows**
 
 ```powershell
-irm https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 **Windows (強化版)**
 
 ```powershell
-irm https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 > デュアルモード操作とトライアルリセット機能を備えた強化版Cursorマシンコード修正ツール
 
 **キャッシュ回避（Windows）：** ミラー/プロキシのキャッシュで古いスクリプトが取得される場合、URL 末尾にタイムスタンプのクエリを付けて回避できます（GitHub raw + タイムスタンプ推奨）：
 
 ```powershell
-irm "https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
+irm "https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
 ```
 
 `wget.la` などのミラーを使う場合も同様に、URL 末尾へタイムスタンプを追加できます：
 
 ```powershell
-irm "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
+irm "https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
 ```
 
 <div align="center">
@@ -329,13 +329,13 @@ irm "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/r
 **macOS**
 
 ```bash
-curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
+curl -fsSL https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
 ```
 
 **Linux**
 
 ```bash
-curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash
+curl -fsSL https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash
 ```
 
 > **Linuxユーザーへの注意：** スクリプトは、一般的なパス（`/usr/bin`, `/usr/local/bin`, `$HOME/.local/bin`, `/opt/cursor`, `/snap/bin`）の確認、`which cursor` コマンドの使用、および `/usr`、`/opt`、`$HOME/.local` ディレクトリ内の検索によって、Cursor のインストールを見つけようとします。Cursorが他の場所にインストールされているか、これらの方法で見つからない場合、スクリプトは失敗する可能性があります。これらの標準的な場所または方法のいずれかを通じてCursorにアクセスできることを確認してください。
@@ -343,13 +343,13 @@ curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-
 **Windows**
 
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 **Windows (強化版)**
 
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 > デュアルモード操作とトライアルリセット機能を備えた強化版Cursorマシンコード修正ツール
 
@@ -378,12 +378,12 @@ irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/re
    または開いたウィンドウに次のように入力します： Start-Process pwsh -Verb RunAs
 4. 管理者ターミナルにリセットスクリプトを入力します：
 
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 強化版スクリプト：
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 ##### 方法3: 検索を使用する
@@ -394,12 +394,12 @@ irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/re
 
 管理者ターミナルにリセットスクリプトを入力します：
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 強化版スクリプト：
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 ### 🔧 PowerShellインストールガイド
@@ -441,7 +441,7 @@ winget install --id Microsoft.PowerShell --source winget
 
 ### 📦 手動インストール
 
-> [リリース](https://github.com/yuaotian/go-cursor-help/releases/latest)からシステムに適したファイルをダウンロードします
+> [リリース](https://github.com/ProtoGhost/go-cursor-help/releases/latest)からシステムに適したファイルをダウンロードします
 
 <details>
 <summary>Windowsパッケージ</summary>
@@ -616,7 +616,7 @@ ETC: 0xa2745f4CD5d32310AC01694ABDB28bA32D125a6b
 
 <div align="center">
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yuaotian/go-cursor-help&type=Date)](https://star-history.com/#yuaotian/go-cursor-help&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ProtoGhost/go-cursor-help&type=Date)](https://star-history.com/#ProtoGhost/go-cursor-help&Date)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/ddaa9df9a94b0029ec3fad399e1c1c4e75755477.svg "Repobeats analytics image")
 

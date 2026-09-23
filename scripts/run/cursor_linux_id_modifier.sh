@@ -1305,11 +1305,11 @@ EOF
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local hook_source_path="$script_dir/../hook/cursor_hook.js"
     local hook_download_urls=(
-        "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
-        "https://down.npee.cn/?https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
-        "https://xget.xi-xu.me/gh/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
-        "https://gh-proxy.com/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
-        "https://gh.chjina.com/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
+        "https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
+        "https://down.npee.cn/?https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
+        "https://xget.xi-xu.me/gh/ProtoGhost/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
+        "https://gh-proxy.com/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
+        "https://gh.chjina.com/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/hook/cursor_hook.js"
     )
     # 支持通过环境变量覆盖下载节点（逗号分隔）
     if [ -n "$CURSOR_HOOK_DOWNLOAD_URLS" ]; then

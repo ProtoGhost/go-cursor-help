@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Release](https://img.shields.io/github/v/release/yuaotian/go-cursor-help?style=flat-square&logo=github&color=blue)](https://github.com/yuaotian/go-cursor-help/releases/latest)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&logo=bookstack)](https://github.com/yuaotian/go-cursor-help/blob/master/LICENSE)
-[![Stars](https://img.shields.io/github/stars/yuaotian/go-cursor-help?style=flat-square&logo=github)](https://github.com/yuaotian/go-cursor-help/stargazers)
+[![Release](https://img.shields.io/github/v/release/ProtoGhost/go-cursor-help?style=flat-square&logo=github&color=blue)](https://github.com/ProtoGhost/go-cursor-help/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&logo=bookstack)](https://github.com/ProtoGhost/go-cursor-help/blob/master/LICENSE)
+[![Stars](https://img.shields.io/github/stars/ProtoGhost/go-cursor-help?style=flat-square&logo=github)](https://github.com/ProtoGhost/go-cursor-help/stargazers)
 
 [🌟 English](README.md) | [🌏 中文](README_CN.md) | [🌏 日本語](README_JP.md)
 
@@ -99,13 +99,13 @@
 **macOS**
 
 ```bash
-curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
+curl -fsSL https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_mac_id_modifier.sh -o ./cursor_mac_id_modifier.sh && sudo bash ./cursor_mac_id_modifier.sh && rm ./cursor_mac_id_modifier.sh
 ```
 
 **Linux**
 
 ```bash
-curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash
+curl -fsSL https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_linux_id_modifier.sh | sudo bash
 ```
 
 > **Linux 用户请注意：** 该脚本通过检查常用路径（`/usr/bin`, `/usr/local/bin`, `$HOME/.local/bin`, `/opt/cursor`, `/snap/bin`）、使用 `which cursor` 命令以及在 `/usr`、`/opt` 和 `$HOME/.local` 目录内搜索，来尝试定位您的 Cursor 安装。如果 Cursor 安装在其他位置或通过这些方法无法找到，脚本可能会失败。请确保可以通过这些标准位置或方法之一访问到 Cursor。
@@ -113,19 +113,19 @@ curl -fsSL https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-
 **Windows**
 
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 **缓存提示（Windows）：** 如果镜像/代理缓存导致拉到旧脚本，可在 URL 末尾追加时间戳参数绕缓存（推荐 raw + 时间戳）：  
 
 ```powershell
-irm "https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
+irm "https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
 ```
 
 如果必须继续使用 `wget.la` 镜像，同样可以在镜像 URL 末尾追加时间戳参数：  
 
 ```powershell
-irm "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
+irm "https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1?$(Get-Date -Format yyyyMMddHHmmss)" | iex
 ```
 
 
@@ -159,12 +159,12 @@ irm "https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/r
    或在打开的窗口中输入: Start-Process pwsh -Verb RunAs
 4. 在管理员终端中输入以下重置脚本:
 
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 增强版脚本：
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 ##### 方法三：通过搜索启动
@@ -175,12 +175,12 @@ irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/re
 
 在管理员终端中输入重置脚本:
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 增强版脚本：
 ```powershell
-irm https://wget.la/https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
+irm https://wget.la/https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_win_id_modifier.ps1 | iex
 ```
 
 ### 🔧 PowerShell 安装指南
@@ -222,7 +222,7 @@ winget install --id Microsoft.PowerShell --source winget
 
 ### 📦 手动安装
 
-> 从 [releases](https://github.com/yuaotian/go-cursor-help/releases/latest) 下载适合您系统的文件
+> 从 [releases](https://github.com/ProtoGhost/go-cursor-help/releases/latest) 下载适合您系统的文件
 
 <details>
 <summary>Windows 安装包</summary>
@@ -352,19 +352,19 @@ touch ~/Library/Application\ Support/Caches/cursor-updater
 #### macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh -o ./cursor_free_trial_reset.sh && sudo bash ./cursor_free_trial_reset.sh && rm ./cursor_free_trial_reset.sh
+curl -fsSL https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh -o ./cursor_free_trial_reset.sh && sudo bash ./cursor_free_trial_reset.sh && rm ./cursor_free_trial_reset.sh
 ```
 
 #### Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh | sudo bash
 ```
 
 #### Windows
 
 ```powershell
-irm https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh | iex
+irm https://raw.githubusercontent.com/ProtoGhost/go-cursor-help/refs/heads/master/scripts/run/cursor_free_trial_reset.sh | iex
 ```
 
 </details>
@@ -451,7 +451,7 @@ irm https://raw.githubusercontent.com/yuaotian/go-cursor-help/refs/heads/master/
 
 <div align="center">
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yuaotian/go-cursor-help&type=Date)](https://star-history.com/#yuaotian/go-cursor-help&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ProtoGhost/go-cursor-help&type=Date)](https://star-history.com/#ProtoGhost/go-cursor-help&Date)
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/ddaa9df9a94b0029ec3fad399e1c1c4e75755477.svg "Repobeats analytics image")
 

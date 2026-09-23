@@ -1,0 +1,17 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare shell scripts to always have LF line endings
+*.sh text eol=lf
+
+# PowerShell and Windows batch files
+*.ps1 text
+*.cmd text
+*.bat text
+
+# Web files
+*.js text
+*.json text
+*.md text
+*.yml text
+*.yaml text

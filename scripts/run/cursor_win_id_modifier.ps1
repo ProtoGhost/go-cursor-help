@@ -1200,7 +1200,7 @@ function Invoke-CursorInitialization {
                 Write-Host "$GREEN✅ [Success]$NC Deleted file: $file"
             }
             catch {
-                Write-Host "$RED❌ [Error]$NC Failed to delete file $file: $($_.Exception.Message)"
+                Write-Host "$RED❌ [Error]$NC Failed to delete file ${file}: $($_.Exception.Message)"
             }
         } else {
             Write-Host "$YELLOW⚠️  [Skip]$NC File does not exist, skipping deletion: $file"
@@ -1215,7 +1215,7 @@ function Invoke-CursorInitialization {
             Write-Host "$GREEN✅ [Success]$NC Cleared directory contents: $folderToCleanContents"
         }
         catch {
-            Write-Host "$RED❌ [Error]$NC Failed to clear directory $folderToCleanContents: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Error]$NC Failed to clear directory ${folderToCleanContents}: $($_.Exception.Message)"
         }
     } else {
         Write-Host "$YELLOW⚠️  [Skip]$NC Directory does not exist, skipping clear: $folderToCleanContents"
@@ -1229,7 +1229,7 @@ function Invoke-CursorInitialization {
             Write-Host "$GREEN✅ [Success]$NC Deleted directory: $folderToDeleteCompletely"
         }
         catch {
-            Write-Host "$RED❌ [Error]$NC Failed to delete directory $folderToDeleteCompletely: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Error]$NC Failed to delete directory ${folderToDeleteCompletely}: $($_.Exception.Message)"
         }
     } else {
         Write-Host "$YELLOW⚠️  [Skip]$NC Directory does not exist, skipping deletion: $folderToDeleteCompletely"
@@ -1845,7 +1845,7 @@ function Modify-MachineCodeConfig {
             }
 
         } catch {
-            Write-Host "$RED❌ [Exception]$NC Exception on attempt $retryCount: $($_.Exception.Message)"
+            Write-Host "$RED❌ [Exception]$NC Exception on attempt ${retryCount}: $($_.Exception.Message)"
             Write-Host "$BLUE💡 [Debug Info]$NC Error type: $($_.Exception.GetType().FullName)"
 
             # Clean temporary file
